@@ -1,7 +1,7 @@
 /**
- * Free LLM Fallback & RoutingMagic System for OpenRouter
- * Exclusively routes through OpenRouter's free tier (:free models and openrouter/free)
- * with multi-tier automatic fallback so no credits are ever consumed.
+ * Free LLM Fallback & Routing System for OpenRouter
+ * Exclusively routes through OpenRouter's verified free tier (:free models and openrouter/free)
+ * with individual multi-tier automatic fallback so no credits are ever consumed.
  */
 
 export const FREE_MODELS_LADDER = [
@@ -11,6 +11,11 @@ export const FREE_MODELS_LADDER = [
   'google/gemma-4-26b-a4b-it:free',
   'nvidia/nemotron-3-super-120b-a12b:free',
   'nvidia/nemotron-3.5-lightning:free',
+  'liquid/lfm-2.5-2.6b:free',
+  'nex-agi/nex-n2.5-pro:free',
+  'nex-agi/nex-n2.5-mini:free',
+  'thinkingmachines/inkling:free',
+  'cohere/north-mini-code:free',
   'z-ai/glm-5.2:free',
 ]
 
@@ -20,7 +25,7 @@ export const FREE_MODELS_LADDER = [
 export function extractJsonFromText(text) {
   if (!text || typeof text !== 'string') return null
   const cleaned = text.trim()
-  
+
   // 1. Direct parse attempt
   try {
     return JSON.parse(cleaned)
@@ -47,7 +52,7 @@ export function extractJsonFromText(text) {
 }
 
 /**
- * Calls OpenRouter with routingmagic fallback across verified free models
+ * Calls OpenRouter with sequential fallback across verified free models
  */
 export async function callFreeLLMWithFallback({
   apiKey,
@@ -59,21 +64,18 @@ export async function callFreeLLMWithFallback({
   let lastError = null
 
   for (let i = 0; i < FREE_MODELS_LADDER.length; i++) {
-    const primaryModel = FREE_MODELS_LADDER[i]
-    const remainingModels = FREE_MODELS_LADDER.slice(i)
+    const currentModel = FREE_MODELS_LADDER[i]
 
     try {
       const payload = {
-        model: primaryModel,
-        models: remainingModels,
-        route: 'fallback',
+        model: currentModel,
         messages,
         temperature,
         max_tokens,
       }
 
-      // Add response_format if required (avoid if openrouter/free or reasoning models conflict)
-      if (requireJson && primaryModel !== 'openrouter/free') {
+      // Add response_format only when supported (avoid on openrouter/free router)
+      if (requireJson && currentModel !== 'openrouter/free') {
         payload.response_format = { type: 'json_object' }
       }
 
@@ -94,16 +96,16 @@ export async function callFreeLLMWithFallback({
         if (content && content.trim()) {
           return {
             content: content.trim(),
-            modelUsed: data.model || primaryModel,
+            modelUsed: data.model || currentModel,
           }
         }
       } else {
         const errorText = await res.text()
-        console.warn(`[FreeLLM Router] ${primaryModel} failed with status ${res.status}: ${errorText}`)
-        lastError = new Error(`OpenRouter (${primaryModel}) ${res.status}: ${errorText}`)
+        console.warn(`[FreeLLM Router] ${currentModel} returned ${res.status}: ${errorText}`)
+        lastError = new Error(`OpenRouter (${currentModel}) ${res.status}: ${errorText}`)
       }
     } catch (err) {
-      console.warn(`[FreeLLM Router] Error invoking ${primaryModel}:`, err.message)
+      console.warn(`[FreeLLM Router] Network error calling ${currentModel}:`, err.message)
       lastError = err
     }
   }
