@@ -1,5 +1,12 @@
+import { callFreeLLMWithFallback, extractJsonFromText } from './_shared/free-llm-router.js'
+
 export const config = {
   runtime: 'edge',
+}
+
+function stripThinkingTags(text) {
+  if (!text) return ''
+  return text.replace(/<think>[\s\S]*?<\/think>/gi, '').trim()
 }
 
 export default async function handler(req) {
@@ -13,7 +20,7 @@ export default async function handler(req) {
   const apiKey = process.env.OPENROUTER_API_KEY || process.env.OPENAI_API_KEY
 
   if (!apiKey) {
-    return new Response(JSON.stringify({ error: 'AI API key not configured' }), {
+    return new Response(JSON.stringify({ error: 'OpenRouter API key not configured' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },
     })
@@ -91,45 +98,28 @@ Respond as the tough interviewer in character:
       },
     ]
 
-    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'meta-llama/llama-3.3-70b-instruct',
-        messages,
-        temperature: mode === 'score' ? 0.2 : 0.6,
-        response_format: mode === 'score' ? { type: 'json_object' } : undefined,
-      }),
+    const { content, modelUsed } = await callFreeLLMWithFallback({
+      apiKey,
+      messages,
+      temperature: mode === 'score' ? 0.2 : 0.6,
+      requireJson: mode === 'score',
     })
 
-    if (!response.ok) {
-      const errText = await response.text()
-      return new Response(JSON.stringify({ error: `AI provider error: ${errText}` }), {
-        status: 502,
+    const cleanContent = stripThinkingTags(content)
+
+    if (mode === 'score') {
+      const parsed = extractJsonFromText(cleanContent)
+      if (parsed) {
+        return new Response(JSON.stringify({ ...parsed, _modelUsed: modelUsed }), {
+          headers: { 'Content-Type': 'application/json' },
+        })
+      }
+      return new Response(JSON.stringify({ raw: cleanContent, _modelUsed: modelUsed }), {
         headers: { 'Content-Type': 'application/json' },
       })
     }
 
-    const data = await response.json()
-    const content = data.choices?.[0]?.message?.content || ''
-
-    if (mode === 'score') {
-      try {
-        const parsed = JSON.parse(content)
-        return new Response(JSON.stringify(parsed), {
-          headers: { 'Content-Type': 'application/json' },
-        })
-      } catch {
-        return new Response(JSON.stringify({ raw: content }), {
-          headers: { 'Content-Type': 'application/json' },
-        })
-      }
-    }
-
-    return new Response(JSON.stringify({ probe: content }), {
+    return new Response(JSON.stringify({ probe: cleanContent, _modelUsed: modelUsed }), {
       headers: { 'Content-Type': 'application/json' },
     })
   } catch (err) {

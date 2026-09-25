@@ -1,7 +1,13 @@
 import masterProfile from '../src/data/master_profile.json'
+import { callFreeLLMWithFallback, extractJsonFromText } from './_shared/free-llm-router.js'
 
 export const config = {
   runtime: 'edge',
+}
+
+function stripThinkingTags(text) {
+  if (!text) return ''
+  return text.replace(/<think>[\s\S]*?<\/think>/gi, '').trim()
 }
 
 export default async function handler(req) {
@@ -15,7 +21,7 @@ export default async function handler(req) {
   const apiKey = process.env.OPENROUTER_API_KEY || process.env.OPENAI_API_KEY
 
   if (!apiKey) {
-    return new Response(JSON.stringify({ error: 'AI API key not configured' }), {
+    return new Response(JSON.stringify({ error: 'OpenRouter API key not configured' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },
     })
@@ -62,38 +68,31 @@ Produce a JSON response with the following schema:
   "interviewElevatorPitch": "60-second spoken intro ('Tell me about yourself') tailored specifically for the hiring manager of this JD."
 }`
 
-    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
+    const messages = [
+      { role: 'system', content: systemPrompt },
+      {
+        role: 'user',
+        content: `Analyze this Job Description and generate tailored ATS assets:\n\nCOMPANY: ${companyName}\nROLE: ${roleTitle}\n\nJOB DESCRIPTION:\n${jdText}`,
       },
-      body: JSON.stringify({
-        model: 'meta-llama/llama-3.3-70b-instruct',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          {
-            role: 'user',
-            content: `Analyze this Job Description and generate tailored ATS assets:\n\nCOMPANY: ${companyName}\nROLE: ${roleTitle}\n\nJOB DESCRIPTION:\n${jdText}`,
-          },
-        ],
-        temperature: 0.2,
-        response_format: { type: 'json_object' },
-      }),
+    ]
+
+    const { content, modelUsed } = await callFreeLLMWithFallback({
+      apiKey,
+      messages,
+      temperature: 0.2,
+      requireJson: true,
     })
 
-    if (!response.ok) {
-      const errText = await response.text()
-      return new Response(JSON.stringify({ error: `AI provider error: ${errText}` }), {
-        status: 502,
+    const cleanContent = stripThinkingTags(content)
+    const parsed = extractJsonFromText(cleanContent)
+
+    if (parsed) {
+      return new Response(JSON.stringify({ ...parsed, _modelUsed: modelUsed }), {
         headers: { 'Content-Type': 'application/json' },
       })
     }
 
-    const data = await response.json()
-    const content = data.choices?.[0]?.message?.content || '{}'
-
-    return new Response(content, {
+    return new Response(cleanContent, {
       headers: { 'Content-Type': 'application/json' },
     })
   } catch (err) {

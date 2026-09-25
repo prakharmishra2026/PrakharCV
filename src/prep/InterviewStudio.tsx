@@ -20,13 +20,99 @@ import {
   Pause,
   Award,
   BookOpen,
+  Lock,
+  KeyRound,
+  ArrowLeft,
 } from 'lucide-react'
 import {
   COMPANY_BATTLECARDS,
   RAPID_FIRE_QUESTIONS,
 } from './prepData'
+import { useAdminAuth } from './useAdminAuth'
 
 type TabType = 'battlecards' | 'griller' | 'rapidfire' | 'tailor'
+
+function AdminGatekeeper({ onUnlock }: { onUnlock: (passcode: string) => boolean }) {
+  const [passcode, setPasscode] = useState('')
+  const [error, setError] = useState(false)
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!onUnlock(passcode)) {
+      setError(true)
+    }
+  }
+
+  return (
+    <div className="min-h-[85vh] flex items-center justify-center px-4 py-12">
+      <div className="w-full max-w-md p-8 sm:p-10 rounded-3xl bg-card/85 dark:bg-card/90 backdrop-blur-2xl border border-border shadow-2xl space-y-6 text-center animate-fadeIn relative overflow-hidden">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-20 bg-primary/20 blur-2xl -z-10 rounded-full" />
+
+        <div className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/25 flex items-center justify-center text-primary mx-auto shadow-lg shadow-primary/10">
+          <Lock className="w-8 h-8" />
+        </div>
+
+        <div className="space-y-2">
+          <span className="text-[11px] font-mono uppercase tracking-widest text-primary font-bold px-3 py-1 rounded-full bg-primary/10 border border-primary/20 inline-block">
+            Restricted Access
+          </span>
+          <h1 className="text-2xl sm:text-3xl font-display font-bold text-foreground">
+            Executive Prep Studio
+          </h1>
+          <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+            Confidential interview battlecards, target offer playbooks, and negotiation records are restricted to administrator view.
+          </p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4 pt-2">
+          <div className="space-y-2 text-left">
+            <label className="text-xs font-mono font-bold text-muted-foreground block">
+              ADMINISTRATOR PASSCODE
+            </label>
+            <input
+              type="password"
+              autoFocus
+              placeholder="Enter PIN or Passcode..."
+              value={passcode}
+              onChange={(e) => {
+                setPasscode(e.target.value)
+                setError(false)
+              }}
+              className={`w-full bg-background border rounded-2xl px-4 py-3.5 text-sm text-foreground focus:outline-none transition-all ${
+                error
+                  ? 'border-red-500 focus:border-red-500 ring-1 ring-red-500/30'
+                  : 'border-border focus:border-primary'
+              }`}
+            />
+            {error && (
+              <p className="text-xs text-red-400 font-medium">
+                Invalid passcode. Please verify or access via administrative URL.
+              </p>
+            )}
+          </div>
+
+          <button
+            type="submit"
+            className="w-full py-3.5 px-4 min-h-[46px] rounded-2xl bg-gradient-to-r from-primary to-accent text-white font-bold text-xs shadow-lg shadow-primary/25 hover:opacity-95 active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-2"
+          >
+            <KeyRound className="w-4 h-4" />
+            Unlock Studio Workspace
+          </button>
+        </form>
+
+        <div className="pt-2 border-t border-border/60">
+          <a
+            href="/"
+            className="inline-flex items-center gap-2 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            Return to Public Portfolio
+          </a>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 interface GrillerHistoryItem {
   role: 'interviewer' | 'candidate'
@@ -47,6 +133,7 @@ interface GrillerHistoryItem {
 }
 
 export default function InterviewStudio() {
+  const { isAdmin, unlock, lock } = useAdminAuth()
   const [activeTab, setActiveTab] = useState<TabType>('battlecards')
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>('deloitte-ai')
   const [copiedKey, setCopiedKey] = useState<string | null>(null)
@@ -214,6 +301,10 @@ export default function InterviewStudio() {
     }
   }
 
+  if (!isAdmin) {
+    return <AdminGatekeeper onUnlock={unlock} />
+  }
+
   return (
     <div className="min-h-screen bg-background text-foreground antialiased selection:bg-primary/20 selection:text-foreground">
       {/* Ambient Top Glow */}
@@ -236,6 +327,14 @@ export default function InterviewStudio() {
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
                   Bar Raiser Mode
                 </span>
+                <button
+                  onClick={lock}
+                  title="Lock Executive Studio (Switch to Public View)"
+                  className="inline-flex items-center gap-1 text-[10px] sm:text-[11px] font-mono px-2 py-0.5 rounded-full bg-muted/60 hover:bg-muted text-muted-foreground hover:text-amber-400 border border-border/80 transition-all cursor-pointer"
+                >
+                  <Lock className="w-3 h-3" />
+                  <span>Lock</span>
+                </button>
               </div>
               <p className="text-[11px] sm:text-xs text-muted-foreground truncate max-w-xs sm:max-w-none">
                 Deloitte · Microsoft · Google · OnMobile
@@ -1245,6 +1344,16 @@ export default function InterviewStudio() {
               </button>
             )
           })}
+
+          {/* Quick Lock Button (Mobile) */}
+          <button
+            onClick={lock}
+            title="Lock Studio (Switch to Public View)"
+            className="flex-1 flex flex-col items-center justify-center py-2 px-1 rounded-xl text-muted-foreground hover:text-amber-400 transition-all active:scale-95 cursor-pointer"
+          >
+            <Lock className="w-5 h-5 mb-0.5 text-muted-foreground" />
+            <span className="text-[10px] leading-tight tracking-tight">Lock</span>
+          </button>
         </div>
       </div>
     </div>
