@@ -283,6 +283,39 @@ export default function InterviewStudio() {
         }),
       })
       const data = await res.json()
+      if (data && !data.atsMatchScore && data.raw) {
+        try {
+          const firstBrace = data.raw.indexOf('{')
+          if (firstBrace !== -1) {
+            let s = data.raw.slice(firstBrace)
+            const stack: string[] = []
+            let inString = false
+            let escaped = false
+            for (let i = 0; i < s.length; i++) {
+              const char = s[i]
+              if (escaped) { escaped = false; continue }
+              if (char === '\\') { escaped = true; continue }
+              if (char === '"') { inString = !inString; continue }
+              if (!inString) {
+                if (char === '{' || char === '[') stack.push(char)
+                else if (char === '}' || char === ']') stack.pop()
+              }
+            }
+            if (inString) s += '"'
+            s = s.replace(/,\s*$/, '').replace(/,\s*"[^"]*"\s*:\s*$/, '').replace(/,\s*"[^"]*"\s*$/, '')
+            while (stack.length > 0) {
+              const top = stack.pop()
+              if (top === '{') s += '}'
+              else if (top === '[') s += ']'
+            }
+            const parsed = JSON.parse(s)
+            setTailorResult({ ...parsed, _modelUsed: data._modelUsed })
+            return
+          }
+        } catch (e) {
+          console.warn('Client JSON fallback parse error:', e)
+        }
+      }
       setTailorResult(data)
     } catch (err) {
       console.error('Tailor error:', err)

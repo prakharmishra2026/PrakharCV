@@ -67,25 +67,30 @@ Analyze the provided Job Description for ${companyName} (${roleTitle}) against P
 Produce a JSON response with the following schema:
 {
   "atsMatchScore": number (0-100),
-  "matchRationale": "2-sentence summary of candidate strength vs. the JD requirements",
-  "matchingKeywords": ["list", "of", "top", "matching", "keywords"],
-  "missingKeywords": ["list", "of", "missing", "or", "underemphasized", "keywords"],
-  "tailoredSummary": "A 3-sentence high-impact executive summary customized for ${companyName} - ${roleTitle}",
+  "matchRationale": "1-sentence summary of candidate strength vs. the JD requirements",
+  "matchingKeywords": ["top 4-6 matching keywords"],
+  "missingKeywords": ["top 2-3 missing or underemphasized keywords"],
+  "tailoredSummary": "A 2-sentence high-impact executive summary customized for ${companyName} - ${roleTitle}",
   "tailoredBulletPoints": [
     {
-      "category": "AI Architecture & Strategy / Operations / Governance",
+      "category": "AI Strategy & Governance",
+      "bullet": "Action verb + verified task + quantified result incorporating JD keywords cleanly",
+      "sourceFact": "Which verified fact in master profile this maps to"
+    },
+    {
+      "category": "Delivery & Talent Optimization",
       "bullet": "Action verb + verified task + quantified result incorporating JD keywords cleanly",
       "sourceFact": "Which verified fact in master profile this maps to"
     }
   ],
-  "interviewElevatorPitch": "60-second spoken intro ('Tell me about yourself') tailored specifically for the hiring manager of this JD."
+  "interviewElevatorPitch": "35-second spoken intro ('Tell me about yourself') tailored specifically for the hiring manager of this JD."
 }`
 
     const messages = [
       { role: 'system', content: systemPrompt },
       {
         role: 'user',
-        content: `Analyze this Job Description and generate tailored ATS assets:\n\nCOMPANY: ${companyName}\nROLE: ${roleTitle}\n\nJOB DESCRIPTION:\n${jdText.slice(0, 3000)}`,
+        content: `Analyze this Job Description and generate tailored ATS assets:\n\nCOMPANY: ${companyName}\nROLE: ${roleTitle}\n\nJOB DESCRIPTION:\n${jdText.slice(0, 2000)}`,
       },
     ]
 
@@ -93,7 +98,7 @@ Produce a JSON response with the following schema:
       apiKey,
       messages,
       temperature: 0.2,
-      max_tokens: 1400,
+      max_tokens: 650,
       requireJson: true,
     })
 
