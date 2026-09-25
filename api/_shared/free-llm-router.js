@@ -1,22 +1,14 @@
 /**
- * Free LLM Fallback & Routing System for OpenRouter
- * Exclusively routes through OpenRouter's verified free tier (:free models and openrouter/free)
- * with individual multi-tier automatic fallback so no credits are ever consumed.
+ * High-Speed Free LLM Fallback & Routing System for OpenRouter
+ * Exclusively routes through OpenRouter's verified free tier (:free models)
+ * with strict per-model timeouts (4.5s) to guarantee response within Vercel Edge execution windows.
  */
 
 export const FREE_MODELS_LADDER = [
-  'openrouter/free',
-  'google/gemma-4-31b-it:free',
-  'qwen/qwen3.8-27b:free',
   'google/gemma-4-26b-a4b-it:free',
-  'nvidia/nemotron-3-super-120b-a12b:free',
-  'nvidia/nemotron-3.5-lightning:free',
+  'qwen/qwen3.8-27b:free',
+  'google/gemma-4-31b-it:free',
   'liquid/lfm-2.5-2.6b:free',
-  'nex-agi/nex-n2.5-pro:free',
-  'nex-agi/nex-n2.5-mini:free',
-  'thinkingmachines/inkling:free',
-  'cohere/north-mini-code:free',
-  'z-ai/glm-5.2:free',
 ]
 
 /**
@@ -52,13 +44,13 @@ export function extractJsonFromText(text) {
 }
 
 /**
- * Calls OpenRouter with sequential fallback across verified free models
+ * Calls OpenRouter with fast sequential fallback across verified free models
  */
 export async function callFreeLLMWithFallback({
   apiKey,
   messages,
   temperature = 0.3,
-  max_tokens = 2000,
+  max_tokens = 1500,
   requireJson = false,
 }) {
   let lastError = null
@@ -74,10 +66,13 @@ export async function callFreeLLMWithFallback({
         max_tokens,
       }
 
-      // Add response_format only when supported (avoid on openrouter/free router)
-      if (requireJson && currentModel !== 'openrouter/free') {
+      if (requireJson) {
         payload.response_format = { type: 'json_object' }
       }
+
+      // Strict 4.5s timeout per model to stay well under Edge function limits
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 4800)
 
       const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
@@ -88,7 +83,10 @@ export async function callFreeLLMWithFallback({
           'X-Title': 'Prakhar Executive Prep Studio (Free Tier)',
         },
         body: JSON.stringify(payload),
+        signal: controller.signal,
       })
+
+      clearTimeout(timeoutId)
 
       if (res.ok) {
         const data = await res.json()
@@ -105,7 +103,7 @@ export async function callFreeLLMWithFallback({
         lastError = new Error(`OpenRouter (${currentModel}) ${res.status}: ${errorText}`)
       }
     } catch (err) {
-      console.warn(`[FreeLLM Router] Network error calling ${currentModel}:`, err.message)
+      console.warn(`[FreeLLM Router] Error/timeout calling ${currentModel}:`, err.message)
       lastError = err
     }
   }
