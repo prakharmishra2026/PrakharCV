@@ -220,33 +220,33 @@ export default function InterviewStudio() {
       <div className="pointer-events-none fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-44 bg-gradient-to-b from-primary/10 via-accent/5 to-transparent blur-3xl -z-10" />
 
       {/* Studio Header (Apple-inspired translucent topbar) */}
-      <header className="sticky top-14 z-30 border-b border-border/80 bg-background/80 backdrop-blur-xl transition-all">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 flex flex-col md:flex-row md:items-center md:justify-between gap-3.5">
+      <header className="relative md:sticky md:top-14 z-30 border-b border-border/80 bg-background/80 backdrop-blur-xl transition-all">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-3.5 flex flex-col md:flex-row md:items-center md:justify-between gap-3.5">
           {/* Brand & Context */}
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg shadow-primary/20 text-white font-bold shrink-0">
-              <Flame className="w-5 h-5 animate-pulse" />
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg shadow-primary/20 text-white font-bold shrink-0">
+              <Flame className="w-4 h-4 sm:w-5 sm:h-5 animate-pulse" />
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-base sm:text-lg font-display font-bold tracking-tight text-foreground">
                   Executive Prep Studio
                 </h1>
-                <span className="inline-flex items-center gap-1 text-[11px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium">
+                <span className="inline-flex items-center gap-1 text-[10px] sm:text-[11px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
                   Bar Raiser Mode
                 </span>
               </div>
-              <p className="text-xs text-muted-foreground">
-                High-stakes simulations for Deloitte · Microsoft · Google · OnMobile
+              <p className="text-[11px] sm:text-xs text-muted-foreground truncate max-w-xs sm:max-w-none">
+                Deloitte · Microsoft · Google · OnMobile
               </p>
             </div>
           </div>
 
-          {/* Segmented Control Navigation (Apple style) */}
+          {/* Segmented Control Navigation (Desktop only; mobile uses dedicated bottom dock) */}
           <nav
             aria-label="Studio Mode"
-            className="flex items-center p-1 bg-muted/60 dark:bg-card/70 border border-border/80 rounded-2xl shadow-inner overflow-x-auto scrollbar-none"
+            className="hidden md:flex items-center p-1 bg-muted/60 dark:bg-card/70 border border-border/80 rounded-2xl shadow-inner overflow-x-auto scrollbar-none"
           >
             {[
               { id: 'battlecards', label: 'Battle Cards', icon: Briefcase },
@@ -280,14 +280,14 @@ export default function InterviewStudio() {
       </header>
 
       {/* Main Body */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-5 sm:py-8 pb-28 md:pb-12">
         {/* ========================================================================= */}
         {/* TAB 1: BATTLE CARDS                                                       */}
         {/* ========================================================================= */}
         {activeTab === 'battlecards' && (
           <div className="space-y-6">
-            {/* Horizontal Company Switcher (Tactile pills) */}
-            <div className="flex items-center gap-2.5 overflow-x-auto pb-1 scrollbar-none">
+            {/* Horizontal Company Switcher (Tactile pills with smooth mobile swipe) */}
+            <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none snap-x snap-mandatory -mx-4 px-4 sm:mx-0 sm:px-0">
               {COMPANY_BATTLECARDS.map((c) => {
                 const isSelected = selectedCompanyId === c.id
                 return (
@@ -297,7 +297,7 @@ export default function InterviewStudio() {
                       setSelectedCompanyId(c.id)
                       setExpandedQuestionIdx(0)
                     }}
-                    className={`flex items-center gap-2.5 px-4 py-2.5 rounded-2xl border text-xs sm:text-sm font-semibold tracking-tight transition-all duration-150 shrink-0 cursor-pointer active:scale-[0.97] ${
+                    className={`flex items-center gap-2 px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-2xl border text-xs sm:text-sm font-semibold tracking-tight transition-all duration-150 shrink-0 cursor-pointer active:scale-[0.97] snap-start min-h-[44px] ${
                       isSelected
                         ? 'bg-card text-foreground border-primary shadow-md shadow-primary/10 ring-1 ring-primary/30'
                         : 'bg-card/40 text-muted-foreground border-border/70 hover:border-primary/40 hover:text-foreground hover:bg-card/70'
@@ -355,7 +355,7 @@ export default function InterviewStudio() {
                 </div>
 
                 {/* Quick Actions Card */}
-                <div className="shrink-0 flex flex-col gap-2.5 min-w-[200px]">
+                <div className="shrink-0 flex flex-col sm:flex-row lg:flex-col gap-2.5 w-full lg:w-auto min-w-[200px]">
                   <button
                     onClick={() => {
                       setGrillerCompany(activeCompany.id)
@@ -363,7 +363,7 @@ export default function InterviewStudio() {
                       setCurrentQuestion(activeCompany.grillingQuestions[0]?.question || '')
                       setActiveTab('griller')
                     }}
-                    className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-gradient-to-r from-primary to-accent text-white font-bold text-xs shadow-lg shadow-primary/25 hover:opacity-95 active:scale-[0.98] transition-all cursor-pointer"
+                    className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 min-h-[44px] rounded-2xl bg-gradient-to-r from-primary to-accent text-white font-bold text-xs shadow-lg shadow-primary/25 hover:opacity-95 active:scale-[0.98] transition-all cursor-pointer"
                   >
                     <Flame className="w-4 h-4" />
                     Mock Grill This Role
@@ -375,7 +375,7 @@ export default function InterviewStudio() {
                       setTailorJdText(activeCompany.defaultJd)
                       setActiveTab('tailor')
                     }}
-                    className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl bg-card border border-border text-foreground text-xs font-semibold hover:border-primary/40 active:scale-[0.98] transition-all cursor-pointer shadow-sm"
+                    className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[44px] rounded-2xl bg-card border border-border text-foreground text-xs font-semibold hover:border-primary/40 active:scale-[0.98] transition-all cursor-pointer shadow-sm"
                   >
                     <FileText className="w-3.5 h-3.5 text-muted-foreground" />
                     Tailor CV for this JD
@@ -386,7 +386,7 @@ export default function InterviewStudio() {
 
             {/* Special Section: OnMobile Rescue Center (If Viewing OnMobile) */}
             {activeCompany.rescuePlan && (
-              <section className="rounded-3xl bg-amber-500/10 border border-amber-500/30 p-6 sm:p-7 shadow-lg space-y-4">
+              <section className="rounded-3xl bg-amber-500/10 border border-amber-500/30 p-5 sm:p-7 shadow-lg space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-2xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0">
@@ -409,7 +409,7 @@ export default function InterviewStudio() {
                     onClick={() =>
                       handleCopy(activeCompany.rescuePlan!.emailBody, 'onmobile-rescue-email')
                     }
-                    className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500 text-black text-xs font-bold hover:bg-amber-400 active:scale-[0.98] transition-all shrink-0 shadow cursor-pointer"
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[44px] rounded-xl bg-amber-500 text-black text-xs font-bold hover:bg-amber-400 active:scale-[0.98] transition-all shrink-0 shadow cursor-pointer"
                   >
                     {copiedKey === 'onmobile-rescue-email' ? (
                       <>
@@ -863,11 +863,11 @@ export default function InterviewStudio() {
                 className="w-full bg-background border border-border rounded-2xl p-4 text-sm text-foreground focus:outline-none focus:border-primary resize-y leading-relaxed font-sans"
               />
 
-              <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
                 <div className="flex items-center gap-2">
                   <button
                     onClick={fillSampleAnswer}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-muted/60 text-xs font-semibold text-muted-foreground hover:text-foreground transition-all cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-3 py-2 min-h-[38px] rounded-xl bg-muted/60 text-xs font-semibold text-muted-foreground hover:text-foreground transition-all cursor-pointer"
                   >
                     <BookOpen className="w-3.5 h-3.5" />
                     Fill Verified STAR Sample
@@ -878,18 +878,18 @@ export default function InterviewStudio() {
                       setTimerSeconds(0)
                       setIsTimerRunning(false)
                     }}
-                    className="p-2 rounded-xl text-muted-foreground hover:text-foreground text-xs flex items-center gap-1 cursor-pointer"
+                    className="p-2 min-h-[38px] rounded-xl text-muted-foreground hover:text-foreground text-xs flex items-center gap-1 cursor-pointer"
                   >
                     <RotateCcw className="w-3.5 h-3.5" />
                     Reset
                   </button>
                 </div>
 
-                <div className="flex items-center gap-2.5">
+                <div className="grid grid-cols-1 sm:flex items-center gap-2.5 w-full sm:w-auto">
                   <button
                     disabled={isGrilling || !candidateResponse.trim()}
                     onClick={() => handleSendGrill('grill')}
-                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-card border border-border text-foreground text-xs font-bold hover:border-primary/50 active:scale-[0.98] transition-all disabled:opacity-50 cursor-pointer shadow-sm"
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[44px] rounded-xl bg-card border border-border text-foreground text-xs font-bold hover:border-primary/50 active:scale-[0.98] transition-all disabled:opacity-50 cursor-pointer shadow-sm"
                   >
                     <Flame className="w-4 h-4 text-red-400" />
                     Pressure Probe (Grill)
@@ -897,7 +897,7 @@ export default function InterviewStudio() {
                   <button
                     disabled={isGrilling || !candidateResponse.trim()}
                     onClick={() => handleSendGrill('score')}
-                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-primary to-accent text-white font-bold text-xs hover:opacity-95 active:scale-[0.98] transition-all disabled:opacity-50 shadow-md shadow-primary/20 cursor-pointer"
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 min-h-[44px] rounded-xl bg-gradient-to-r from-primary to-accent text-white font-bold text-xs hover:opacity-95 active:scale-[0.98] transition-all disabled:opacity-50 shadow-md shadow-primary/20 cursor-pointer"
                   >
                     <Send className="w-4 h-4" />
                     Score My Answer
@@ -954,7 +954,7 @@ export default function InterviewStudio() {
                 </button>
               )}
 
-              <div className="flex items-center justify-between pt-6 border-t border-border/80">
+              <div className="flex items-center justify-between gap-3 pt-6 border-t border-border/80">
                 <button
                   onClick={() => {
                     setShowRapidHint(false)
@@ -962,7 +962,7 @@ export default function InterviewStudio() {
                       idx > 0 ? idx - 1 : RAPID_FIRE_QUESTIONS.length - 1
                     )
                   }}
-                  className="px-4 py-2 rounded-xl border border-border text-xs font-semibold text-muted-foreground hover:text-foreground cursor-pointer active:scale-[0.97] transition-all"
+                  className="flex-1 sm:flex-none px-5 py-2.5 min-h-[44px] inline-flex items-center justify-center rounded-xl border border-border text-xs font-semibold text-muted-foreground hover:text-foreground cursor-pointer active:scale-[0.97] transition-all"
                 >
                   Previous
                 </button>
@@ -974,7 +974,7 @@ export default function InterviewStudio() {
                       idx < RAPID_FIRE_QUESTIONS.length - 1 ? idx + 1 : 0
                     )
                   }}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-primary-foreground font-bold text-xs hover:bg-primary/90 active:scale-[0.97] transition-all cursor-pointer shadow"
+                  className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-5 py-2.5 min-h-[44px] rounded-xl bg-primary text-primary-foreground font-bold text-xs hover:bg-primary/90 active:scale-[0.97] transition-all cursor-pointer shadow"
                 >
                   Next Drill
                   <ChevronRight className="w-4 h-4" />
@@ -999,7 +999,7 @@ export default function InterviewStudio() {
             </div>
 
             {/* Input Form Card */}
-            <div className="p-6 sm:p-7 rounded-3xl bg-card border border-border shadow-sm space-y-4">
+            <div className="p-5 sm:p-7 rounded-3xl bg-card border border-border shadow-sm space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="text-xs font-mono font-bold text-muted-foreground block mb-1.5">
@@ -1009,7 +1009,7 @@ export default function InterviewStudio() {
                     type="text"
                     value={tailorCompany}
                     onChange={(e) => setTailorCompany(e.target.value)}
-                    className="w-full bg-background border border-border rounded-xl px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:border-primary font-medium"
+                    className="w-full bg-background border border-border rounded-xl px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:border-primary font-medium min-h-[44px]"
                   />
                 </div>
                 <div>
@@ -1020,7 +1020,7 @@ export default function InterviewStudio() {
                     type="text"
                     value={tailorRole}
                     onChange={(e) => setTailorRole(e.target.value)}
-                    className="w-full bg-background border border-border rounded-xl px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:border-primary font-medium"
+                    className="w-full bg-background border border-border rounded-xl px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:border-primary font-medium min-h-[44px]"
                   />
                 </div>
               </div>
@@ -1045,7 +1045,7 @@ export default function InterviewStudio() {
                 <button
                   disabled={isTailoring || !tailorJdText.trim()}
                   onClick={handleRunTailor}
-                  className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-primary to-accent text-white font-bold text-xs hover:opacity-95 active:scale-[0.98] transition-all disabled:opacity-50 shadow-md shadow-primary/20 cursor-pointer"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 min-h-[46px] rounded-2xl bg-gradient-to-r from-primary to-accent text-white font-bold text-xs hover:opacity-95 active:scale-[0.98] transition-all disabled:opacity-50 shadow-md shadow-primary/20 cursor-pointer"
                 >
                   <Sparkles className="w-4 h-4" />
                   {isTailoring ? 'Analyzing ATS Match...' : 'Generate Tailored Resume & Pitch'}
@@ -1212,6 +1212,41 @@ export default function InterviewStudio() {
           </div>
         )}
       </main>
+
+      {/* Mobile Bottom Navigation Dock (Apple-style Tactile Tab Bar) */}
+      <div className="md:hidden fixed bottom-3 left-3 right-3 z-40">
+        <div className="bg-card/90 dark:bg-card/95 backdrop-blur-2xl border border-border/90 rounded-2xl shadow-2xl p-1.5 flex items-center justify-around ring-1 ring-black/10">
+          {[
+            { id: 'battlecards', label: 'Battlecards', icon: Briefcase },
+            { id: 'griller', label: 'Mock Room', icon: Flame },
+            { id: 'rapidfire', label: 'Drills', icon: Zap },
+            { id: 'tailor', label: 'CV Tailor', icon: FileText },
+          ].map((tab) => {
+            const Icon = tab.icon
+            const isActive = activeTab === tab.id
+            return (
+              <button
+                key={tab.id}
+                onClick={() => {
+                  setActiveTab(tab.id as TabType)
+                  window.scrollTo({ top: 0, behavior: 'smooth' })
+                }}
+                className={`flex-1 flex flex-col items-center justify-center py-2 px-1 rounded-xl transition-all duration-150 active:scale-95 cursor-pointer ${
+                  isActive
+                    ? 'text-primary font-bold bg-primary/10'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <Icon className={`w-5 h-5 mb-0.5 ${isActive ? 'text-primary' : 'text-muted-foreground'}`} />
+                <span className="text-[10px] leading-tight tracking-tight">{tab.label}</span>
+                {isActive && (
+                  <span className="w-1 h-1 rounded-full bg-primary mt-0.5" />
+                )}
+              </button>
+            )
+          })}
+        </div>
+      </div>
     </div>
   )
 }

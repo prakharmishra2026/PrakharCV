@@ -1,64 +1,9 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { Sun, Moon, House, ChevronRight, Flame } from 'lucide-react'
-import { getPageTitles, getSectionLabels } from './articles/registry'
+import { getPageTitles } from './articles/registry'
 
 const PAGE_TITLE = getPageTitles()
-const SECTION_LABELS = getSectionLabels()
-
-/** Observes h2[id] elements and returns the currently visible section ID */
-function useActiveSection(pathname: string, enabled: boolean) {
-  const [activeId, setActiveId] = useState<string | null>(null)
-
-  useEffect(() => {
-    setActiveId(null)
-    if (!enabled) return
-
-    let io: IntersectionObserver | null = null
-    let mo: MutationObserver | null = null
-
-    function setup() {
-      const h1 = document.querySelector('h1')
-      const headings = Array.from(document.querySelectorAll('h2[id]'))
-      if (headings.length === 0) return false
-
-      io = new IntersectionObserver(
-        (entries) => {
-          for (const entry of entries) {
-            if (entry.isIntersecting) {
-              if (entry.target.tagName === 'H1') {
-                setActiveId(null)
-                return
-              }
-              setActiveId(entry.target.id)
-              return
-            }
-          }
-        },
-        { rootMargin: '-64px 0px -75% 0px' }
-      )
-
-      if (h1) io.observe(h1)
-      headings.forEach((h) => io!.observe(h))
-      return true
-    }
-
-    // Try immediately (component may already be rendered)
-    if (!setup()) {
-      mo = new MutationObserver(() => {
-        if (setup()) mo!.disconnect()
-      })
-      mo.observe(document.body, { childList: true, subtree: true })
-    }
-
-    return () => {
-      io?.disconnect()
-      mo?.disconnect()
-    }
-  }, [pathname, enabled])
-
-  return activeId
-}
 
 function useLang() {
   const { pathname } = useLocation()
@@ -95,7 +40,7 @@ function useTheme() {
   return { isDark, toggleTheme }
 }
 
-/** Shared controls: theme circle + Prep Studio link */
+/** Shared controls: segmented Portfolio / Prep Studio switcher + theme circle */
 function NavControls({ isDark, toggleTheme }: {
   isDark: boolean; toggleTheme: () => void
 }) {
@@ -104,23 +49,52 @@ function NavControls({ isDark, toggleTheme }: {
 
   return (
     <div className="flex items-center gap-2">
-      <Link
-        to={isPrep ? '/' : '/prep'}
-        className={`px-3 py-1.5 rounded-full border text-xs font-semibold transition-all shadow-sm flex items-center gap-1.5 ${
-          isPrep
-            ? 'bg-muted text-foreground border-border hover:bg-card'
-            : 'bg-card text-primary border-primary/30 hover:border-primary hover:shadow-primary/20 hover:shadow-md'
-        }`}
+      {/* Universal Mode Switcher (Tactile Apple-style Segmented Control) */}
+      <div 
+        role="tablist"
+        aria-label="Navigation Mode"
+        className="flex items-center p-1 bg-muted/80 dark:bg-card/90 backdrop-blur-xl border border-border/80 rounded-full shadow-sm"
       >
-        <Flame className="w-3.5 h-3.5 text-primary" />
-        <span>{isPrep ? '← Portfolio' : 'Prep Studio'}</span>
-      </Link>
+        <Link
+          to="/"
+          role="tab"
+          aria-selected={!isPrep}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold tracking-tight transition-all duration-150 active:scale-95 cursor-pointer ${
+            !isPrep
+              ? 'bg-background text-foreground shadow-sm border border-border/60'
+              : 'text-muted-foreground hover:text-foreground'
+          }`}
+          aria-label="Switch to Portfolio"
+        >
+          <House className="w-3.5 h-3.5 shrink-0" />
+          <span className="inline">Portfolio</span>
+        </Link>
+        <Link
+          to="/prep"
+          role="tab"
+          aria-selected={isPrep}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold tracking-tight transition-all duration-150 active:scale-95 cursor-pointer ${
+            isPrep
+              ? 'bg-gradient-to-r from-primary to-accent text-white shadow-sm'
+              : 'text-muted-foreground hover:text-foreground'
+          }`}
+          aria-label="Switch to Prep Studio"
+        >
+          <Flame className={`w-3.5 h-3.5 shrink-0 ${isPrep ? 'text-white' : 'text-primary'}`} />
+          <span className="inline">Prep Studio</span>
+          {!isPrep && (
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+          )}
+        </Link>
+      </div>
+
+      {/* Theme toggle */}
       <button
         onClick={toggleTheme}
-        className="w-10 h-10 rounded-full bg-card border border-border flex items-center justify-center shadow-lg hover:border-primary/50 hover:shadow-primary/20 hover:shadow-xl transition-colors"
+        className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-card/85 dark:bg-card/90 backdrop-blur-xl border border-border/80 flex items-center justify-center shadow-sm hover:border-primary/50 transition-all active:scale-95 shrink-0 cursor-pointer"
         aria-label="Toggle theme"
       >
-        {isDark ? <Sun className="w-5 h-5 text-primary" /> : <Moon className="w-5 h-5 text-primary" />}
+        {isDark ? <Sun className="w-4 h-4 text-primary" /> : <Moon className="w-4 h-4 text-primary" />}
       </button>
     </div>
   )
@@ -129,91 +103,58 @@ function NavControls({ isDark, toggleTheme }: {
 export default function GlobalNav() {
   const { pathname, isHome, pageTitle } = useLang()
   const { isDark, toggleTheme } = useTheme()
-  const activeSection = useActiveSection(pathname, !isHome)
-
-  const hasBar = !isHome
-
-  // Breadcrumb: show active section label or fall back to page title
-  const sectionLabels = SECTION_LABELS[pathname]
-  const activeSectionLabel = activeSection && sectionLabels?.[activeSection]
+  const isPrep = pathname.startsWith('/prep') || pathname.startsWith('/cockpit')
 
   const [hydrated, setHydrated] = useState(false)
   useEffect(() => setHydrated(true), [])
 
-  // Animation tracking — bar and back link animate only on first appearance
-  const barShown = useRef(false)
-  const animateBar = hasBar && !barShown.current
-  if (hasBar) barShown.current = true
-
-  const backLinkShown = useRef(false)
-  const animateBackLink = !isHome && !backLinkShown.current
-  if (!isHome) backLinkShown.current = true
-
-  const controls = <NavControls isDark={isDark} toggleTheme={toggleTheme} />
-
-  const fade = (duration: string) => ({ animation: `nav-fade-in ${duration} ease-out` })
-
-  // Bar visible: controls inside it
-  if (hasBar) {
-    return (
-      <nav className="sticky top-0 z-50 relative">
-        <div
-          className="absolute inset-0 bg-background/80 backdrop-blur-md border-b border-border"
-          style={animateBar ? fade('0.35s') : undefined}
-        />
-        <div className="relative pt-4 pb-3 px-6 pl-14 xl:pl-6 flex items-center justify-between">
-          {/* Left: back link on inner pages */}
-          <div className="min-w-0 flex items-center">
-            {!isHome && (
-              <nav
-                aria-label="Breadcrumb"
-                className="inline-flex items-center gap-1.5 text-sm"
-                style={animateBackLink ? fade('0.4s') : undefined}
-              >
-                <Link
-                  to="/"
-                  className="inline-flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors shrink-0"
-                >
-                  <House className="w-4 h-4" />
-                  <span className="hidden sm:inline font-semibold">Prakhar Mishra</span>
-                </Link>
-                {pageTitle && (
-                  <>
-                    <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/50 shrink-0" />
-                    <button
-                      onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                      className={`hover:text-foreground transition-colors cursor-pointer truncate ${activeSectionLabel ? 'text-muted-foreground' : 'text-foreground font-medium'}`}
-                    >
-                      {pageTitle}
-                    </button>
-                  </>
-                )}
-                {activeSectionLabel && (
-                  <>
-                    <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/50 shrink-0 hidden sm:block" />
-                    <span className="text-foreground font-medium truncate max-w-[140px] sm:max-w-none hidden sm:inline">
-                      {activeSectionLabel}
-                    </span>
-                  </>
-                )}
-              </nav>
-            )}
-          </div>
-          {/* Right: controls */}
-          <div className="flex items-center gap-3 shrink-0">
-            {controls}
-          </div>
-        </div>
-      </nav>
-    )
-  }
-
-  // Home: controls always fixed at top-4 right-6
   if (!hydrated) return null
 
   return (
-    <div className="fixed top-4 right-6 z-50 flex items-center gap-3">
-      {controls}
-    </div>
+    <nav className="sticky top-0 z-50 w-full bg-background/80 backdrop-blur-xl border-b border-border/70 transition-all">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 h-14 sm:h-16 flex items-center justify-between gap-2 sm:gap-4">
+        {/* Left: Brand Identity & Avatar */}
+        <div className="min-w-0 flex items-center gap-2.5">
+          <Link
+            to="/"
+            className="flex items-center gap-2 group shrink-0 active:scale-95 transition-transform"
+            aria-label="Prakhar Mishra Home"
+          >
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full overflow-hidden border border-border/80 group-hover:border-primary/60 transition-colors shadow-sm bg-muted">
+              <img
+                src="/foto-avatar.jpg"
+                alt="Prakhar Mishra"
+                className="w-full h-full object-cover"
+                width={36}
+                height={36}
+              />
+            </div>
+            <div className="flex flex-col text-left">
+              <span className="font-display font-bold text-xs sm:text-sm tracking-tight text-foreground leading-tight group-hover:text-primary transition-colors">
+                Prakhar Mishra
+              </span>
+              <span className="text-[10px] text-muted-foreground font-mono leading-none hidden sm:inline">
+                Chief of Staff · AI Transformation
+              </span>
+            </div>
+          </Link>
+
+          {/* Subpage Breadcrumb (Only on subpages other than /prep to keep bar clean) */}
+          {!isHome && !isPrep && pageTitle && (
+            <div className="hidden md:flex items-center gap-1.5 text-xs text-muted-foreground">
+              <ChevronRight className="w-3 h-3 text-muted-foreground/50 shrink-0" />
+              <span className="truncate max-w-[150px] font-medium text-foreground">
+                {pageTitle}
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* Center / Right: Universal Mode Switcher & Theme Control */}
+        <div className="flex items-center shrink-0">
+          <NavControls isDark={isDark} toggleTheme={toggleTheme} />
+        </div>
+      </div>
+    </nav>
   )
 }
