@@ -46,6 +46,8 @@ export function getPageTitles(): Record<string, string> {
     '/': "Prakhar Mishra's Portfolio",
     '/en': "Prakhar Mishra's Portfolio",
     '/about': 'About',
+    '/prep': 'Executive Interview Prep Studio',
+    '/cockpit': 'Executive Interview Prep Studio',
   }
 }
 

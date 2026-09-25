@@ -11,6 +11,7 @@ const MusicToggle = lazy(() => import('./MusicToggle'))
 const OpsDashboard = lazy(() => import('./ops/OpsDashboard'))
 const PrivacyPolicy = lazy(() => import('./PrivacyPolicy'))
 const AboutPage = lazy(() => import('./AboutPage'))
+const InterviewStudio = lazy(() => import('./prep/InterviewStudio'))
 
 class ChatErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
   state = { hasError: false }
@@ -65,7 +66,7 @@ function GlobalChat() {
   const [hydrated, setHydrated] = useState(false)
   useEffect(() => setHydrated(true), [])
 
-  if (!hydrated || pathname.startsWith('/ops')) return null
+  if (!hydrated || pathname.startsWith('/ops') || pathname.startsWith('/prep') || pathname.startsWith('/cockpit')) return null
 
   const lang = 'en'
 
@@ -82,7 +83,7 @@ function GlobalMusic() {
   const { pathname } = useLocation()
   const [hydrated, setHydrated] = useState(false)
   useEffect(() => setHydrated(true), [])
-  if (!hydrated || pathname.startsWith('/ops')) return null
+  if (!hydrated || pathname.startsWith('/ops') || pathname.startsWith('/prep') || pathname.startsWith('/cockpit')) return null
   return (
     <Suspense fallback={null}>
       <MusicToggle />
@@ -151,6 +152,8 @@ const app = (
           <Routes>
             <Route path="/" element={<App />} />
             <Route path="/en" element={<App />} />
+            <Route path="/prep" element={<InterviewStudio />} />
+            <Route path="/cockpit" element={<InterviewStudio />} />
             <Route path="/ops" element={<OpsDashboard />} />
             <Route path="/about" element={<AboutPage lang="en" />} />
             <Route path="/privacy" element={<PrivacyPolicy lang="en" />} />

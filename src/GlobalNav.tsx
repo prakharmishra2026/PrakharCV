@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Sun, Moon, House, ChevronRight } from 'lucide-react'
+import { Sun, Moon, House, ChevronRight, Flame } from 'lucide-react'
 import { getPageTitles, getSectionLabels } from './articles/registry'
 
 const PAGE_TITLE = getPageTitles()
@@ -95,12 +95,26 @@ function useTheme() {
   return { isDark, toggleTheme }
 }
 
-/** Shared controls: theme circle */
+/** Shared controls: theme circle + Prep Studio link */
 function NavControls({ isDark, toggleTheme }: {
   isDark: boolean; toggleTheme: () => void
 }) {
+  const { pathname } = useLocation()
+  const isPrep = pathname.startsWith('/prep') || pathname.startsWith('/cockpit')
+
   return (
     <div className="flex items-center gap-2">
+      <Link
+        to={isPrep ? '/' : '/prep'}
+        className={`px-3 py-1.5 rounded-full border text-xs font-semibold transition-all shadow-sm flex items-center gap-1.5 ${
+          isPrep
+            ? 'bg-muted text-foreground border-border hover:bg-card'
+            : 'bg-card text-primary border-primary/30 hover:border-primary hover:shadow-primary/20 hover:shadow-md'
+        }`}
+      >
+        <Flame className="w-3.5 h-3.5 text-primary" />
+        <span>{isPrep ? '← Portfolio' : 'Prep Studio'}</span>
+      </Link>
       <button
         onClick={toggleTheme}
         className="w-10 h-10 rounded-full bg-card border border-border flex items-center justify-center shadow-lg hover:border-primary/50 hover:shadow-primary/20 hover:shadow-xl transition-colors"

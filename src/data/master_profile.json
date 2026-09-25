@@ -1,0 +1,202 @@
+{
+  "meta": {
+    "version": "2026.07",
+    "generated": "2026-07-07",
+    "sources": [
+      "Resume 2024.pdf (verified baseline, mirrored in seed_master_profile.json)",
+      "career_narrative_2024_2026.md (reconstructed narrative)",
+      "work_inventory_2024_2026.md (raw work inventory)"
+    ],
+    "truthfulness_rule": "Every achievement below traces to a verified source. Confidentiality is strictly maintained by avoiding proprietary numbers and specific client names."
+  },
+  "personal_info": {
+    "name": "Prakhar Mishra",
+    "email": "prakharmishra2015@gmail.com",
+    "phone": "+91 62395 54160",
+    "location": "Gurgaon, India",
+    "linkedin": "linkedin.com/in/prakhar-mishra-b74b85124",
+    "github": "github.com/prakharmishra2026",
+    "target_comp_lpa": "35-40 LPA (at least 35 fixed)",
+    "notice_period_days": 90
+  },
+  "summary": "Strategic Chief of Staff and AI Transformation Lead (Senior Manager) reporting directly to the Executive Vice President of Cloud & Custom Apps (C&CA) India. Converts leadership priorities into enterprise-grade operating systems across large-scale business units. Uniquely bridges operational strategy (workforce supply chain, rotations governance, forecasting, utilization) with advanced AI transformation (adaptive assessment platforms, voice-interview agents, prompt optimization, and AI-native client delivery). Proven builder of custom AI tools and platforms (AAT, TalentX, OPEN DECK, Magic Router) and leader of high-performing program governance teams.",
+  "work_experience": [
+    {
+      "title": "Senior Manager",
+      "company": "Capgemini India",
+      "location": "Gurgaon",
+      "start_date": "August 2020",
+      "end_date": "Present",
+      "roles": [
+        {
+          "title": "Chief of Staff & AI Transformation Lead — Cloud & Custom Apps (C&CA India)",
+          "start_date": "August 2023",
+          "end_date": "Present",
+          "scope_note": "Serve as Chief of Staff to the EVP, running the strategic execution and industrialization office of a large-scale developer division. Drive a multi-workstream transformation portfolio across workforce supply chain, rotation governance, forecasting, KPI models, reporting hubs, and GenAI/AI adoption across a multi-account enterprise portfolio.",
+          "achievements": [
+            "CHIEF OF STAFF OPERATIONS: Convert leadership priorities into robust enterprise operating systems (playbooks, KPI trackers, governance cadences, custom portals) to drive execution and delivery discipline across a large-scale business unit.",
+            "AI TRANSFORMATION & CLIENT ADVISORY: Partner with account engagement managers to analyze client automation frameworks (e.g., auditing order-to-cash workflows for a major US retailer); triaged solutions to distinguish simple AI-assisted process automation from multi-agent orchestration, scaling high-impact success stories across the account portfolio.",
+            "ADAPTIVE ASSESSMENT ENGINE (AAT): Envisioned and designed the business logic for the Adaptive Assessment Tool (AAT) to support workforce learning pathways. Built a CAT-level adaptive MCQ engine that scales question difficulty in real-time and provides cohort dashboards to optimize L&D pedagogy, successfully cutting recertification failure rates for expensive external badges from 20% to under 5%.",
+            "BOTP COMPLIANCE & COST MITIGATION: Integrated Back On Track Performance (BOTP) compliance tracking into the AAT platform, providing legally robust, automated documentation of low-performing profiles to streamline exit management and save millions in salary overhead.",
+            "TALENTX CO-CREATION: Co-envisioned TalentX, an AI voice-interview platform that evaluates candidates by transcribing recorded voice answers and generating dynamic, context-aware follow-up questions from the JD and resume. Designed granular scoring scorecards and visual skill trees to slash panel interview volumes and subjective feedback loops.",
+            "WORKFORCE SUPPLY CHAIN & TALENT FACTORY: Co-developed the C&CA India build-vs-buy talent strategy (70% upskill-and-deploy / 30% targeted hiring) and structured learning pathways across 5 key domains (Developers, Software Engineers, SMEs, AI Native Engineers, Architects/EMs) to transition I-shaped developers into multi-disciplinary T-shaped software engineers.",
+            "ROTATION & SUCCESSION GOVERNANCE: Governed rotation execution across a multi-account portfolio against a 16% external rotation target — designed transparent tenure-based calculation logic, account-level scorecards, and a SharePoint-automated Succession & Rotations Dashboard, delivering 637 rotations.",
+            "CHRYSALIS TALENT PORTAL: Managed the Chrysalis operating model, building an end-to-end portal for hire estimation, project allocation, and performance transparency; grew B-School talent pool billability from 30% to 60% and reduced requirement-gathering cycle time by 80% via the custom portal.",
+            "FORECASTING & KPI GOVERNANCE: Converted business unit KPIs into program-specific success metrics; improved forecasting hygiene by defining roles/windows and linking Talent Fulfillment validation to sold/pursuit demands.",
+            "DATABASES & REPORTING PLATFORMS: Drove the rehaul of reporting systems (CCAReports, Account Matrix 1.0/2.0, Smart Insights) to combine utilization, demand-supply, and revenue forecasting into a single operational view.",
+            "COMMUNITIES & ADVOCACY: Shaped EM, GenAI, Architect, and Industry community structures — strategy, certification programs, and a content-generation KM portal; launched a central quarterly newsletter to a wide subscriber base (tens of thousands) and drove a 50% increase in professional certifications within one year.",
+            "AI FINOPS & OBSERVED OPTIMIZATION: Led prompt/token optimization thinking (e.g., routing/tiered models reducing token burn from 11,700 to 3,000 tokens), semantic caching, RAG retrieval optimization, and four-layer token observability; advocated for Claude Certified Architect foundations certification.",
+            "TEAM LEADERSHIP & ORG DESIGN: Managed 4 direct reports and oversaw 15 indirect contributors; led 4 Chrysalis talents handling governance for leadership while grooming 4 more, designing the role-based operating structures (org chart, ownership maps, workflows) they work within."
+          ]
+        },
+        {
+          "title": "Business Analyst - Theatrical Distribution Software Service",
+          "start_date": "December 2021",
+          "end_date": "August 2023",
+          "achievements": [
+            "Collaborated with leading movie studios to enhance products, aligning them with business requirements and industry standards.",
+            "Conducted product demos for internal and external stakeholders, improving customer engagement by 15%.",
+            "Served as a liaison between development teams and clients, ensuring clear communication of deliverables, reducing project delays by 10%.",
+            "Led up-selling efforts for DEX features, contributing to a 5% increase in overall revenue.",
+            "Translated stakeholder requirements into actionable deliverables, including functional specifications, user stories, and process diagrams; consistently performed competitor and market analysis."
+          ]
+        },
+        {
+          "title": "Project Manager - ReelSwipe (iOS trailer-binging app)",
+          "start_date": "March 2022",
+          "end_date": "June 2022",
+          "achievements": [
+            "Developed business use cases and profitability forecasts, securing budget approval for the app.",
+            "Led a team of 4 (architect + developers), delivering on time and showcasing at the National Association of Broadcasters Show 2022.",
+            "Achieved a 25% reduction in project delivery time through effective leadership and team collaboration."
+          ]
+        },
+        {
+          "title": "Scrum Master - Product Migration over AWS & Azure Cloud",
+          "start_date": "August 2020",
+          "end_date": "December 2021",
+          "achievements": [
+            "Facilitated daily Scrum calls for product migration, ensuring agile adherence — 20% improvement in delivery timelines.",
+            "Proactively identified and resolved project roadblocks, achieving a 95% on-time delivery rate.",
+            "Managed the project timeline and led progress demos to senior leadership."
+          ]
+        }
+      ]
+    }
+  ],
+  "education": [
+    {
+      "degree": "MBA",
+      "institution": "Xaviers Institute of Management (XIMB), Bhubaneshwar",
+      "start_date": "June 2018",
+      "end_date": "July 2020",
+      "achievements": [
+        "Conducted SWOT & PESTEL analysis of Micron Tech & Sistema, purchased by Barakaat Consulting and resold at INR 900 per unit.",
+        "Primary research on climate change contributed to the United Nations Talanoa Dialogue 2020 report.",
+        "Developed two bestselling SKUs through pricing, naming, and branding strategy for Nestlé Kioske as Student Ambassador, boosting campus sales by 25%.",
+        "Campus Finalist, Colgate Transcend 2019 (Top 250 out of 3,200 participants).",
+        "Composed and managed the theme video song for Xpressions (XIMB cultural fest), leading a team of 5."
+      ]
+    },
+    {
+      "degree": "B.Tech",
+      "institution": "National Institute of Technology (NITJ), Jalandhar",
+      "start_date": "March 2013",
+      "end_date": "March 2017",
+      "achievements": [
+        "Publicity Secretary - Utkansh (NITJ cultural fest), leading promotions and a team of 15.",
+        "Founder & Head of H7 Studios, campus content-creation group — 20+ videos, team of 8.",
+        "Awarded INR 10,000 for composing the NIT Jalandhar theme song.",
+        "Selected for the Summer Internship Programme at NIT Suratkal — only student from the batch.",
+        "Taught by Shri J.S. Gill, the real-life inspiration behind the movie Mission Raniganj."
+      ]
+    }
+  ],
+  "internships": [
+    {
+      "title": "Intern",
+      "company": "Ogilvy India",
+      "location": "Gurgaon",
+      "start_date": "April 2019",
+      "end_date": "June 2019",
+      "achievements": [
+        "Developed digital communication plans for Ayushman Bharat, OPPO Smartphones, and BMW.",
+        "Composed the theme song for the Ayushman Bharat campaign, approved and presented to the client.",
+        "Created influencer cost-benefit analysis for Ayushman Bharat, improving campaign efficiency 15%.",
+        "Suggested 'Thought Starters' for OPPO's PUBG campaign, adopted by agency and client; designed a Real-Life PUBG Arena offline extension.",
+        "Developed a Customer Journey Map for BMW with strategies to overcome touchpoint barriers."
+      ]
+    },
+    {
+      "title": "Intern",
+      "company": "Central Institute of Mine & Fuel Research (CIMFR), IIT Roorkee",
+      "start_date": "May 2016",
+      "end_date": "June 2016",
+      "achievements": [
+        "Conducted a 3D simulation of an underground mine using ANSYS 15.0 to assess heavy-machinery impact on structural integrity.",
+        "Analyzed safety conditions and recommended improvements enhancing mine stability/safety by 20%"
+      ]
+    }
+  ],
+  "skills": [
+    "Strategic PMO & Program Portfolio Management (Chief of Staff scope)",
+    "Workforce Transformation & Talent Supply Chain (rotations, Talent Factory, build-vs-buy)",
+    "GenAI / Agentic AI Adoption & Governance",
+    "AI FinOps - Token/Prompt Optimization, Adoption Scorecards",
+    "AI-enabled Assessment Platforms (AAT/TalentX, Industry Assessment Tool)",
+    "KPI Governance, Forecasting & Operational Metrics (Utilization, ARVE, Pyramid)",
+    "Power BI, SharePoint, KM Portals & Reporting Ecosystems",
+    "Team Management & Org Design",
+    "Agile Methodologies (Scrum, SAFe)",
+    "Business Analysis & Requirement Gathering",
+    "GenAI Tools & Platforms (OpenRouter, n8n, Claude Code, Antigravity)",
+    "SQL, Jira & ServiceNow (SNOW)",
+    "Communication & Leadership"
+  ],
+  "personal_ai_projects": [
+    {
+      "name": "OPEN DECK (OpenTec)",
+      "description": "White-coded system using Vision Models to parse complex corporate presentation layouts (swimlanes, workflows, diagrams) and automatically convert them into fully editable PowerPoint files."
+    },
+    {
+      "name": "Magic Router (RoutingMagic)",
+      "description": "Custom multi-agent model council router that dynamically fallbacks to the most cost-effective free LLMs based on task categories, eliminating API query costs."
+    },
+    {
+      "name": "Investogram",
+      "description": "Personal stock portfolio and mutual fund recommendation engine that parses existing portfolios and generates data-driven investment insights."
+    }
+  ],
+  "credentials": [
+    "Outskill Catalyst AI Accelerator (full program completed, trained in Karpathy-style step-by-step AI project methodologies)",
+    "AWS Partner: Sales Accreditation (Business)",
+    "AWS Solutions Architect – Associate",
+    "SAFe 5 Product Owner/Product Manager",
+    "Six Sigma Green Belt (KPMG)"
+  ],
+  "pending_facts": {
+    "_rule": "Flagged unverified by career_narrative_2024_2026.md. DO NOT include in any generated CV until the listed proof exists. Move to achievements once verified.",
+    "items": [
+      {
+        "claim": "Onboarded 50+ candidates through Chrysalis (2024-2026)",
+        "needed_proof": "Total candidates onboarded, billability %, deployment %, time-to-deployment"
+      },
+      {
+        "claim": "Engaged 144 accounts on AI usage",
+        "needed_proof": "Account list / outreach tracker: contacted, responded, assessed, moved to adoption plan, measurable AI benefit (only 29 engagements verified in 2026 Wave 1 view)"
+      },
+      {
+        "claim": "'Low iteration strategy' phrasing",
+        "needed_proof": "Source only shows 'Low LHP Hire' language in Talent Factory material"
+      },
+      {
+        "claim": "Reduced manual leadership reporting effort via standardized dashboards/matrices",
+        "needed_proof": "Hours saved, #dashboards, #users, reporting cycles supported"
+      },
+      {
+        "claim": "Improved GenAI adoption scalability via scorecards, token economics, assessment governance",
+        "needed_proof": "Adoption uplift metrics: active users, license penetration, acceptance rate, productivity gains"
+      }
+    ]
+  }
+}
