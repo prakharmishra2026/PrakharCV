@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import {
   Briefcase,
   Flame,
@@ -16,6 +16,10 @@ import {
   Building2,
   ArrowRight,
   Clock,
+  Play,
+  Pause,
+  Award,
+  BookOpen,
 } from 'lucide-react'
 import {
   COMPANY_BATTLECARDS,
@@ -64,33 +68,46 @@ export default function InterviewStudio() {
   const [showRapidHint, setShowRapidHint] = useState<boolean>(false)
 
   // Tailor state
-  const [tailorCompany, setTailorCompany] = useState<string>('Deloitte')
+  const [tailorCompany, setTailorCompany] = useState<string>('Deloitte S&T')
   const [tailorRole, setTailorRole] = useState<string>('Senior Consultant – AI Strategy')
   const [tailorJdText, setTailorJdText] = useState<string>(COMPANY_BATTLECARDS[0].defaultJd)
   const [isTailoring, setIsTailoring] = useState<boolean>(false)
   const [tailorResult, setTailorResult] = useState<any>(null)
 
-  // Expandable state for battlecard questions
+  // Expandable question state
   const [expandedQuestionIdx, setExpandedQuestionIdx] = useState<number | null>(0)
 
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
   const activeCompany =
     COMPANY_BATTLECARDS.find((c) => c.id === selectedCompanyId) || COMPANY_BATTLECARDS[0]
 
-  // Timer effect
+  // Stopwatch timer
   useEffect(() => {
     let interval: any = null
     if (isTimerRunning) {
       interval = setInterval(() => setTimerSeconds((s) => s + 1), 1000)
-    } else if (!isTimerRunning && timerSeconds !== 0) {
-      clearInterval(interval)
     }
     return () => clearInterval(interval)
-  }, [isTimerRunning, timerSeconds])
+  }, [isTimerRunning])
+
+  // Keyboard shortcut: Cmd+Enter or Ctrl+Enter to submit grill
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+        if (activeTab === 'griller' && candidateResponse.trim() && !isGrilling) {
+          e.preventDefault()
+          handleSendGrill('score')
+        }
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [activeTab, candidateResponse, isGrilling])
 
   function handleCopy(text: string, key: string) {
     navigator.clipboard.writeText(text)
     setCopiedKey(key)
-    setTimeout(() => setCopiedKey(null), 2500)
+    setTimeout(() => setCopiedKey(null), 2400)
   }
 
   function formatTime(secs: number) {
@@ -106,7 +123,6 @@ export default function InterviewStudio() {
     const companyObj =
       COMPANY_BATTLECARDS.find((c) => c.id === grillerCompany) || COMPANY_BATTLECARDS[0]
 
-    // Push candidate answer to history
     const updatedHistory: GrillerHistoryItem[] = [
       ...grillerHistory,
       { role: 'candidate', text: candidateResponse },
@@ -136,7 +152,7 @@ export default function InterviewStudio() {
           ...prev,
           {
             role: 'interviewer',
-            text: `Scorecard Generated for "${currentQuestion}"`,
+            text: `Executive Evaluation & Scorecard Generated for "${currentQuestion}"`,
             scoreResult: data,
           },
         ])
@@ -188,134 +204,158 @@ export default function InterviewStudio() {
     }
   }
 
+  function fillSampleAnswer() {
+    const comp = COMPANY_BATTLECARDS.find((c) => c.id === grillerCompany)
+    if (comp && comp.grillingQuestions[0]) {
+      setCandidateResponse(comp.grillingQuestions[0].rehearsedDefense)
+      if (textareaRef.current) {
+        textareaRef.current.focus()
+      }
+    }
+  }
+
   return (
-    <div className="min-h-screen bg-background text-foreground selection:bg-primary/20">
-      {/* Studio Header */}
-      <header className="border-b border-border bg-card/60 backdrop-blur-md sticky top-14 z-30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2.5">
-              <span className="p-2 rounded-xl bg-primary/10 text-primary border border-primary/20">
-                <Flame className="w-5 h-5 text-primary animate-pulse" />
-              </span>
-              <div>
-                <h1 className="text-xl sm:text-2xl font-display font-bold tracking-tight text-foreground flex items-center gap-2">
-                  Executive Interview Prep Studio
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 font-mono font-medium">
-                    Live Simulator
-                  </span>
+    <div className="min-h-screen bg-background text-foreground antialiased selection:bg-primary/20 selection:text-foreground">
+      {/* Ambient Top Glow */}
+      <div className="pointer-events-none fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-44 bg-gradient-to-b from-primary/10 via-accent/5 to-transparent blur-3xl -z-10" />
+
+      {/* Studio Header (Apple-inspired translucent topbar) */}
+      <header className="sticky top-14 z-30 border-b border-border/80 bg-background/80 backdrop-blur-xl transition-all">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 flex flex-col md:flex-row md:items-center md:justify-between gap-3.5">
+          {/* Brand & Context */}
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg shadow-primary/20 text-white font-bold shrink-0">
+              <Flame className="w-5 h-5 animate-pulse" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-base sm:text-lg font-display font-bold tracking-tight text-foreground">
+                  Executive Prep Studio
                 </h1>
-                <p className="text-xs sm:text-sm text-muted-foreground">
-                  AI Bar Raiser grilling · Pre-loaded Company Battlecards · Verified ATS CV Tailor
-                </p>
+                <span className="inline-flex items-center gap-1 text-[11px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                  Bar Raiser Mode
+                </span>
               </div>
+              <p className="text-xs text-muted-foreground">
+                High-stakes simulations for Deloitte · Microsoft · Google · OnMobile
+              </p>
             </div>
           </div>
 
-          {/* Navigation Tabs */}
-          <div className="flex items-center gap-1.5 p-1 bg-muted/60 border border-border/80 rounded-xl overflow-x-auto">
-            <button
-              onClick={() => setActiveTab('battlecards')}
-              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                activeTab === 'battlecards'
-                  ? 'bg-card text-foreground shadow-sm border border-border font-semibold'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              <Briefcase className="w-3.5 h-3.5" />
-              Battle Cards
-            </button>
-            <button
-              onClick={() => setActiveTab('griller')}
-              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                activeTab === 'griller'
-                  ? 'bg-card text-foreground shadow-sm border border-border font-semibold text-primary'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              <Flame className="w-3.5 h-3.5 text-primary" />
-              Live Mock Room
-            </button>
-            <button
-              onClick={() => setActiveTab('rapidfire')}
-              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                activeTab === 'rapidfire'
-                  ? 'bg-card text-foreground shadow-sm border border-border font-semibold'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              <Zap className="w-3.5 h-3.5 text-amber-500" />
-              Rapid-Fire Drills
-            </button>
-            <button
-              onClick={() => setActiveTab('tailor')}
-              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                activeTab === 'tailor'
-                  ? 'bg-card text-foreground shadow-sm border border-border font-semibold'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              <FileText className="w-3.5 h-3.5 text-emerald-500" />
-              1-Click CV Tailor
-            </button>
-          </div>
+          {/* Segmented Control Navigation (Apple style) */}
+          <nav
+            aria-label="Studio Mode"
+            className="flex items-center p-1 bg-muted/60 dark:bg-card/70 border border-border/80 rounded-2xl shadow-inner overflow-x-auto scrollbar-none"
+          >
+            {[
+              { id: 'battlecards', label: 'Battle Cards', icon: Briefcase },
+              { id: 'griller', label: 'Mock Room', icon: Flame },
+              { id: 'rapidfire', label: 'Rapid Drills', icon: Zap },
+              { id: 'tailor', label: 'CV Tailor', icon: FileText },
+            ].map((tab) => {
+              const Icon = tab.icon
+              const isActive = activeTab === tab.id
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id as TabType)}
+                  className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-semibold tracking-tight transition-all duration-150 ease-out shrink-0 cursor-pointer active:scale-[0.97] ${
+                    isActive
+                      ? 'bg-card dark:bg-foreground/10 text-foreground shadow-sm border border-border/80'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-card/40'
+                  }`}
+                >
+                  <Icon
+                    className={`w-3.5 h-3.5 transition-colors ${
+                      isActive ? 'text-primary' : 'text-muted-foreground'
+                    }`}
+                  />
+                  <span>{tab.label}</span>
+                </button>
+              )
+            })}
+          </nav>
         </div>
       </header>
 
-      {/* Main Container */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-        {/* ================= TAB 1: BATTLE CARDS ================= */}
+      {/* Main Body */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+        {/* ========================================================================= */}
+        {/* TAB 1: BATTLE CARDS                                                       */}
+        {/* ========================================================================= */}
         {activeTab === 'battlecards' && (
-          <div className="space-y-8 animate-fadeIn">
-            {/* Company Selector Pills */}
-            <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
-              {COMPANY_BATTLECARDS.map((c) => (
-                <button
-                  key={c.id}
-                  onClick={() => {
-                    setSelectedCompanyId(c.id)
-                    setExpandedQuestionIdx(0)
-                  }}
-                  className={`flex items-center gap-2.5 px-4 py-2.5 rounded-xl border text-sm font-medium transition-all shrink-0 cursor-pointer ${
-                    selectedCompanyId === c.id
-                      ? 'bg-primary/10 border-primary text-primary shadow-sm'
-                      : 'bg-card/70 border-border text-muted-foreground hover:border-primary/40 hover:text-foreground'
-                  }`}
-                >
-                  <Building2 className="w-4 h-4" />
-                  <span>{c.name}</span>
-                  <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
-                    {c.badge}
-                  </span>
-                </button>
-              ))}
+          <div className="space-y-6">
+            {/* Horizontal Company Switcher (Tactile pills) */}
+            <div className="flex items-center gap-2.5 overflow-x-auto pb-1 scrollbar-none">
+              {COMPANY_BATTLECARDS.map((c) => {
+                const isSelected = selectedCompanyId === c.id
+                return (
+                  <button
+                    key={c.id}
+                    onClick={() => {
+                      setSelectedCompanyId(c.id)
+                      setExpandedQuestionIdx(0)
+                    }}
+                    className={`flex items-center gap-2.5 px-4 py-2.5 rounded-2xl border text-xs sm:text-sm font-semibold tracking-tight transition-all duration-150 shrink-0 cursor-pointer active:scale-[0.97] ${
+                      isSelected
+                        ? 'bg-card text-foreground border-primary shadow-md shadow-primary/10 ring-1 ring-primary/30'
+                        : 'bg-card/40 text-muted-foreground border-border/70 hover:border-primary/40 hover:text-foreground hover:bg-card/70'
+                    }`}
+                  >
+                    <Building2 className={`w-4 h-4 ${isSelected ? 'text-primary' : 'text-muted-foreground'}`} />
+                    <span>{c.name}</span>
+                    <span
+                      className={`text-[10px] uppercase font-mono px-2 py-0.5 rounded-md ${
+                        isSelected
+                          ? 'bg-primary/15 text-primary border border-primary/25'
+                          : 'bg-muted text-muted-foreground'
+                      }`}
+                    >
+                      {c.badge}
+                    </span>
+                  </button>
+                )
+              })}
             </div>
 
-            {/* Target Role Hero Header */}
-            <div className="p-6 rounded-2xl bg-card border border-border/80 shadow-sm relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-80 h-80 bg-primary/5 rounded-full blur-3xl -z-10 pointer-events-none" />
-              <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
-                <div className="space-y-2 max-w-3xl">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-xs font-semibold px-2.5 py-1 rounded-md bg-primary/15 text-primary border border-primary/25">
+            {/* Target Role Hero Banner (Apple frosted glass) */}
+            <section className="relative overflow-hidden rounded-3xl bg-card/75 backdrop-blur-xl border border-border shadow-xl p-6 sm:p-8">
+              <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-6">
+                <div className="space-y-3 max-w-3xl">
+                  <div className="flex flex-wrap items-center gap-2.5">
+                    <span className="text-xs font-mono font-bold px-3 py-1 rounded-lg bg-primary/15 text-primary border border-primary/25">
                       {activeCompany.badge}
                     </span>
-                    <span className="text-xs text-muted-foreground flex items-center gap-1">
+                    <span className="text-xs text-muted-foreground flex items-center gap-1.5 font-medium">
                       <Clock className="w-3.5 h-3.5" />
                       {activeCompany.experienceReq}
                     </span>
-                    <span className="text-xs text-muted-foreground">• {activeCompany.location}</span>
+                    <span className="text-xs text-muted-foreground">·</span>
+                    <span className="text-xs text-muted-foreground">{activeCompany.location}</span>
                   </div>
-                  <h2 className="text-2xl sm:text-3xl font-display font-bold text-foreground">
-                    {activeCompany.name}
+
+                  <h2 className="text-2xl sm:text-3xl font-display font-bold tracking-tight text-foreground">
+                    {activeCompany.roleTitle}
                   </h2>
-                  <p className="text-base font-medium text-primary/90">{activeCompany.roleTitle}</p>
-                  <p className="text-sm text-muted-foreground leading-relaxed pt-1">
+                  <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
                     {activeCompany.overview}
                   </p>
+
+                  {/* Strategic Edge Callout */}
+                  <div className="mt-4 p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-emerald-500/5 to-transparent border border-emerald-500/25">
+                    <div className="flex items-start gap-3">
+                      <Sparkles className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                      <div className="text-xs sm:text-sm">
+                        <strong className="text-emerald-400 font-semibold">Prakhar's Strategic Edge: </strong>
+                        <span className="text-foreground/90">{activeCompany.prakharAdvantage}</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="shrink-0 flex flex-col gap-2">
+                {/* Quick Actions Card */}
+                <div className="shrink-0 flex flex-col gap-2.5 min-w-[200px]">
                   <button
                     onClick={() => {
                       setGrillerCompany(activeCompany.id)
@@ -323,7 +363,7 @@ export default function InterviewStudio() {
                       setCurrentQuestion(activeCompany.grillingQuestions[0]?.question || '')
                       setActiveTab('griller')
                     }}
-                    className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 transition-all shadow-md cursor-pointer"
+                    className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-gradient-to-r from-primary to-accent text-white font-bold text-xs shadow-lg shadow-primary/25 hover:opacity-95 active:scale-[0.98] transition-all cursor-pointer"
                   >
                     <Flame className="w-4 h-4" />
                     Mock Grill This Role
@@ -335,137 +375,125 @@ export default function InterviewStudio() {
                       setTailorJdText(activeCompany.defaultJd)
                       setActiveTab('tailor')
                     }}
-                    className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-card border border-border text-foreground text-xs font-medium hover:border-primary/40 transition-all cursor-pointer"
+                    className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl bg-card border border-border text-foreground text-xs font-semibold hover:border-primary/40 active:scale-[0.98] transition-all cursor-pointer shadow-sm"
                   >
-                    <FileText className="w-3.5 h-3.5" />
+                    <FileText className="w-3.5 h-3.5 text-muted-foreground" />
                     Tailor CV for this JD
                   </button>
                 </div>
               </div>
+            </section>
 
-              {/* Prakhar Advantage Callout */}
-              <div className="mt-6 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-sm">
-                <div className="flex items-start gap-2.5">
-                  <Sparkles className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                  <div>
-                    <span className="font-semibold text-emerald-400">Prakhar's Strategic Edge: </span>
-                    <span className="text-muted-foreground">{activeCompany.prakharAdvantage}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Special Section: OnMobile Rescue Plan if viewing OnMobile */}
+            {/* Special Section: OnMobile Rescue Center (If Viewing OnMobile) */}
             {activeCompany.rescuePlan && (
-              <div className="p-6 rounded-2xl bg-amber-500/10 border border-amber-500/30 shadow-md space-y-4">
-                <div className="flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-2.5">
-                    <span className="p-2 rounded-lg bg-amber-500/20 text-amber-400">
+              <section className="rounded-3xl bg-amber-500/10 border border-amber-500/30 p-6 sm:p-7 shadow-lg space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-2xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0">
                       <AlertTriangle className="w-5 h-5" />
-                    </span>
+                    </div>
                     <div>
-                      <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
+                      <h3 className="text-base sm:text-lg font-display font-bold text-foreground flex items-center gap-2">
                         HR Interview Forensic Audit & Reinstatement Protocol
-                        <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-mono">
-                          Action Required
+                        <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded-full bg-amber-500/25 text-amber-300 font-bold">
+                          Diagnosed from Audio
                         </span>
                       </h3>
                       <p className="text-xs text-muted-foreground">
-                        Diagnosed from your 32-minute HR screening audio recording
+                        Extracted from your 32-minute HR screening call · Vishy remains single point of contact
                       </p>
                     </div>
                   </div>
+
                   <button
                     onClick={() =>
                       handleCopy(activeCompany.rescuePlan!.emailBody, 'onmobile-rescue-email')
                     }
-                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-amber-500 text-black text-xs font-bold hover:bg-amber-400 transition-colors shrink-0 cursor-pointer"
+                    className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500 text-black text-xs font-bold hover:bg-amber-400 active:scale-[0.98] transition-all shrink-0 shadow cursor-pointer"
                   >
                     {copiedKey === 'onmobile-rescue-email' ? (
                       <>
-                        <Check className="w-3.5 h-3.5" />
-                        Copied Email!
+                        <Check className="w-4 h-4" />
+                        Copied to Clipboard!
                       </>
                     ) : (
                       <>
-                        <Copy className="w-3.5 h-3.5" />
+                        <Copy className="w-4 h-4" />
                         Copy Reinstatement Email
                       </>
                     )}
                   </button>
                 </div>
 
-                <p className="text-xs sm:text-sm text-foreground/90 leading-relaxed bg-background/50 p-3 rounded-xl border border-amber-500/20">
+                <p className="text-xs sm:text-sm text-foreground/90 bg-background/60 p-4 rounded-2xl border border-amber-500/20 leading-relaxed">
                   {activeCompany.rescuePlan.issueSummary}
                 </p>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
+                {/* 3 Pillars of Reframe */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   {activeCompany.rescuePlan.reframePoints.map((pt, idx) => (
                     <div
                       key={idx}
-                      className="p-3.5 rounded-xl bg-card border border-border space-y-1.5"
+                      className="p-4 rounded-2xl bg-card/80 border border-border/80 space-y-1.5"
                     >
-                      <div className="text-xs font-bold text-amber-400 flex items-center gap-1.5">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-amber-500" />
+                      <div className="text-xs font-bold text-amber-400 flex items-center gap-2">
+                        <CheckCircle2 className="w-4 h-4 text-amber-500 shrink-0" />
                         {pt.title}
                       </div>
-                      <p className="text-xs text-muted-foreground leading-snug">{pt.explanation}</p>
+                      <p className="text-xs text-muted-foreground leading-relaxed">{pt.explanation}</p>
                     </div>
                   ))}
                 </div>
 
-                <div className="mt-3 p-4 rounded-xl bg-background border border-border space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold text-muted-foreground uppercase font-mono">
-                      Subject: {activeCompany.rescuePlan.emailSubject}
-                    </span>
-                    <span className="text-[11px] text-muted-foreground">
-                      Send to Vishy & HR Lead immediately
-                    </span>
+                {/* Email Preview */}
+                <div className="rounded-2xl bg-background border border-border/90 p-4 space-y-2">
+                  <div className="flex items-center justify-between text-xs text-muted-foreground font-mono">
+                    <span>SUBJECT: {activeCompany.rescuePlan.emailSubject}</span>
+                    <span className="text-[11px] text-amber-400 font-semibold">Ready to Send</span>
                   </div>
-                  <pre className="text-xs font-sans whitespace-pre-wrap text-foreground/80 leading-relaxed max-h-48 overflow-y-auto p-2 rounded bg-card/50">
+                  <pre className="text-xs font-sans whitespace-pre-wrap text-foreground/80 leading-relaxed max-h-48 overflow-y-auto p-3 rounded-xl bg-card/60">
                     {activeCompany.rescuePlan.emailBody}
                   </pre>
                 </div>
-              </div>
+              </section>
             )}
 
-            {/* Loop Structure Grid */}
-            <div className="space-y-3">
-              <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground font-mono">
-                Official Interview Loop & Rounds
+            {/* Loop Map Grid */}
+            <section className="space-y-3">
+              <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-muted-foreground">
+                Official Interview Pipeline & Rounds
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
                 {activeCompany.loopStructure.map((loop, idx) => (
                   <div
                     key={idx}
-                    className="p-4 rounded-xl bg-card border border-border/80 flex flex-col justify-between space-y-3"
+                    className="p-5 rounded-2xl bg-card border border-border/80 shadow-sm flex flex-col justify-between space-y-3"
                   >
                     <div>
-                      <div className="text-xs font-mono text-primary font-semibold">
-                        Round {idx + 1}
+                      <div className="text-[11px] font-mono text-primary font-bold">
+                        ROUND 0{idx + 1}
                       </div>
                       <h4 className="text-sm font-bold text-foreground mt-0.5">{loop.round}</h4>
                       <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
                         {loop.focus}
                       </p>
                     </div>
-                    <div className="pt-2 border-t border-border/50 text-[11px] text-muted-foreground flex items-center justify-between">
-                      <span>Interviewer:</span>
-                      <span className="font-medium text-foreground">{loop.interviewer}</span>
+                    <div className="pt-3 border-t border-border/60 text-xs text-muted-foreground flex items-center justify-between font-mono">
+                      <span>Interviewer</span>
+                      <span className="text-foreground font-semibold">{loop.interviewer}</span>
                     </div>
                   </div>
                 ))}
               </div>
-            </div>
+            </section>
 
-            {/* Anticipated Grilling Questions & Rehearsed Answers */}
-            <div className="space-y-4">
+            {/* Anticipated Grilling Questions & Rehearsed Defenses */}
+            <section className="space-y-3.5">
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground font-mono">
+                <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-muted-foreground">
                   Anticipated Grilling Questions & Rehearsed Defenses
                 </h3>
-                <span className="text-xs text-muted-foreground">Click question to inspect defense</span>
+                <span className="text-xs text-muted-foreground">Click to inspect breakdown</span>
               </div>
 
               <div className="space-y-3">
@@ -474,42 +502,42 @@ export default function InterviewStudio() {
                   return (
                     <div
                       key={idx}
-                      className="rounded-xl bg-card border border-border overflow-hidden transition-all"
+                      className="rounded-2xl bg-card border border-border shadow-sm overflow-hidden transition-all duration-200"
                     >
                       <button
                         onClick={() => setExpandedQuestionIdx(isExpanded ? null : idx)}
-                        className="w-full text-left p-4 sm:p-5 flex items-start justify-between gap-4 hover:bg-muted/30 transition-colors cursor-pointer"
+                        className="w-full text-left p-5 flex items-start justify-between gap-4 hover:bg-muted/20 active:scale-[0.99] transition-all cursor-pointer"
                       >
                         <div className="space-y-1">
-                          <span className="text-xs font-mono text-primary font-semibold">
-                            Question {idx + 1}
+                          <span className="text-[11px] font-mono text-primary font-bold">
+                            PRESSURE SCENARIO 0{idx + 1}
                           </span>
                           <h4 className="text-sm sm:text-base font-semibold text-foreground">
                             {gq.question}
                           </h4>
                         </div>
-                        <span className="p-1 rounded-md text-muted-foreground shrink-0 mt-1">
+                        <div className="p-1 rounded-lg bg-muted text-muted-foreground shrink-0 mt-0.5">
                           {isExpanded ? (
                             <ChevronDown className="w-4 h-4" />
                           ) : (
                             <ChevronRight className="w-4 h-4" />
                           )}
-                        </span>
+                        </div>
                       </button>
 
                       {isExpanded && (
-                        <div className="p-4 sm:p-5 pt-0 space-y-4 border-t border-border/60 bg-muted/10 animate-fadeIn">
-                          {/* Tough Angle Probe */}
-                          <div className="p-3.5 rounded-lg bg-red-500/10 border border-red-500/20 text-xs sm:text-sm">
+                        <div className="p-5 pt-0 space-y-4 border-t border-border/60 bg-muted/10">
+                          {/* Tough Bar Raiser Angle */}
+                          <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-xs sm:text-sm">
                             <span className="font-bold text-red-400">Tough Bar Raiser Probe: </span>
                             <span className="text-foreground/90">{gq.toughAngle}</span>
                           </div>
 
-                          {/* Rehearsed Defense */}
+                          {/* Rehearsed Defense Script */}
                           <div className="space-y-2">
                             <div className="flex items-center justify-between">
-                              <span className="text-xs font-bold text-primary uppercase font-mono">
-                                Prakhar's Rehearsed Executive Defense:
+                              <span className="text-xs font-mono font-bold text-primary uppercase">
+                                Prakhar's Rehearsed Executive Defense
                               </span>
                               <button
                                 onClick={() => handleCopy(gq.rehearsedDefense, `gq-def-${idx}`)}
@@ -517,29 +545,31 @@ export default function InterviewStudio() {
                               >
                                 {copiedKey === `gq-def-${idx}` ? (
                                   <>
-                                    <Check className="w-3 h-3 text-emerald-400" /> Copied
+                                    <Check className="w-3.5 h-3.5 text-emerald-400" />
+                                    Copied
                                   </>
                                 ) : (
                                   <>
-                                    <Copy className="w-3 h-3" /> Copy Script
+                                    <Copy className="w-3.5 h-3.5" />
+                                    Copy Script
                                   </>
                                 )}
                               </button>
                             </div>
-                            <p className="text-xs sm:text-sm text-foreground/90 leading-relaxed bg-background/80 p-3.5 rounded-xl border border-border">
+                            <p className="text-xs sm:text-sm text-foreground/90 leading-relaxed bg-background/80 p-4 rounded-2xl border border-border">
                               {gq.rehearsedDefense}
                             </p>
                           </div>
 
-                          {/* Metrics anchors */}
+                          {/* Metrics to Hit */}
                           <div className="flex flex-wrap items-center gap-2 pt-1">
                             <span className="text-xs text-muted-foreground font-mono">
-                              Key Metrics to Speak:
+                              Mandatory Metric Anchors:
                             </span>
                             {gq.keyMetrics.map((m, mIdx) => (
                               <span
                                 key={mIdx}
-                                className="text-xs px-2.5 py-0.5 rounded-md bg-primary/10 text-primary border border-primary/20 font-mono"
+                                className="text-xs px-2.5 py-0.5 rounded-lg bg-primary/10 text-primary border border-primary/20 font-mono font-medium"
                               >
                                 {m}
                               </span>
@@ -551,23 +581,23 @@ export default function InterviewStudio() {
                   )
                 })}
               </div>
-            </div>
+            </section>
 
             {/* STAR Stories Bank */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground font-mono">
-                Dedicated STAR Stories Bank
+            <section className="space-y-3.5">
+              <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-muted-foreground">
+                Verified STAR Story Bank
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {activeCompany.starStories.map((story, sIdx) => (
                   <div
                     key={sIdx}
-                    className="p-5 rounded-2xl bg-card border border-border space-y-3 flex flex-col justify-between"
+                    className="p-5 sm:p-6 rounded-2xl bg-card border border-border shadow-sm flex flex-col justify-between space-y-3"
                   >
-                    <div className="space-y-2">
+                    <div className="space-y-2.5">
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-mono font-semibold text-emerald-400 px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20">
-                          STAR Story #{sIdx + 1}
+                        <span className="text-[11px] font-mono font-bold px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-400 border border-emerald-500/25">
+                          STAR STORY #{sIdx + 1}
                         </span>
                         <button
                           onClick={() =>
@@ -579,24 +609,26 @@ export default function InterviewStudio() {
                           className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1 cursor-pointer"
                         >
                           {copiedKey === `star-${sIdx}` ? (
-                            <Check className="w-3 h-3 text-emerald-400" />
+                            <Check className="w-3.5 h-3.5 text-emerald-400" />
                           ) : (
-                            <Copy className="w-3 h-3" />
+                            <Copy className="w-3.5 h-3.5" />
                           )}
                         </button>
                       </div>
+
                       <h4 className="text-base font-bold text-foreground">{story.title}</h4>
-                      <div className="space-y-1.5 text-xs text-muted-foreground leading-relaxed">
+
+                      <div className="space-y-1.5 text-xs text-muted-foreground leading-relaxed pt-1">
                         <p>
-                          <strong className="text-foreground">S:</strong> {story.situation}
+                          <strong className="text-foreground font-semibold">S:</strong> {story.situation}
                         </p>
                         <p>
-                          <strong className="text-foreground">T:</strong> {story.task}
+                          <strong className="text-foreground font-semibold">T:</strong> {story.task}
                         </p>
                         <p>
-                          <strong className="text-foreground">A:</strong> {story.action}
+                          <strong className="text-foreground font-semibold">A:</strong> {story.action}
                         </p>
-                        <p className="text-emerald-400/90 font-medium">
+                        <p className="text-emerald-400/90 font-medium pt-1">
                           <strong>R:</strong> {story.result}
                         </p>
                       </div>
@@ -604,34 +636,36 @@ export default function InterviewStudio() {
                   </div>
                 ))}
               </div>
-            </div>
+            </section>
 
-            {/* Counter Questions */}
-            <div className="p-5 rounded-2xl bg-card border border-border space-y-3">
-              <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground font-mono">
-                Sharp Counter-Questions to Ask Leadership
+            {/* Counter Questions to Ask Leadership */}
+            <section className="p-6 rounded-3xl bg-card border border-border shadow-sm space-y-3">
+              <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-muted-foreground">
+                Executive Counter-Questions to Ask the Interviewer
               </h3>
-              <ul className="space-y-2 text-xs sm:text-sm text-foreground/90">
+              <ul className="space-y-2.5 text-xs sm:text-sm text-foreground/90">
                 {activeCompany.counterQuestions.map((cq, qIdx) => (
-                  <li key={qIdx} className="flex items-start gap-2.5">
+                  <li key={qIdx} className="flex items-start gap-3">
                     <ArrowRight className="w-4 h-4 text-primary shrink-0 mt-0.5" />
                     <span>{cq}</span>
                   </li>
                 ))}
               </ul>
-            </div>
+            </section>
           </div>
         )}
 
-        {/* ================= TAB 2: LIVE MOCK ROOM ================= */}
+        {/* ========================================================================= */}
+        {/* TAB 2: LIVE MOCK ROOM                                                     */}
+        {/* ========================================================================= */}
         {activeTab === 'griller' && (
-          <div className="max-w-4xl mx-auto space-y-6 animate-fadeIn">
-            {/* Top Selector Card */}
-            <div className="p-5 rounded-2xl bg-card border border-border space-y-4">
+          <div className="max-w-4xl mx-auto space-y-6">
+            {/* Top Config Card */}
+            <div className="p-6 rounded-3xl bg-card border border-border shadow-sm space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-xs font-mono text-muted-foreground block mb-1">
-                    TARGET COMPANY
+                  <label className="text-xs font-mono font-bold text-muted-foreground block mb-1.5">
+                    SELECT TARGET ROLE
                   </label>
                   <select
                     value={grillerCompany}
@@ -643,7 +677,7 @@ export default function InterviewStudio() {
                         setCurrentQuestion(comp.grillingQuestions[0]?.question || '')
                       }
                     }}
-                    className="w-full bg-background border border-border rounded-xl px-3.5 py-2 text-sm text-foreground focus:outline-none focus:border-primary"
+                    className="w-full bg-background border border-border rounded-xl px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:border-primary font-medium"
                   >
                     {COMPANY_BATTLECARDS.map((c) => (
                       <option key={c.id} value={c.id}>
@@ -654,34 +688,42 @@ export default function InterviewStudio() {
                 </div>
 
                 <div>
-                  <label className="text-xs font-mono text-muted-foreground block mb-1">
-                    INTERVIEW ROUND
+                  <label className="text-xs font-mono font-bold text-muted-foreground block mb-1.5">
+                    ROUND FOCUS
                   </label>
                   <input
                     type="text"
                     value={grillerRound}
                     onChange={(e) => setGrillerRound(e.target.value)}
-                    className="w-full bg-background border border-border rounded-xl px-3.5 py-2 text-sm text-foreground focus:outline-none focus:border-primary"
+                    className="w-full bg-background border border-border rounded-xl px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:border-primary font-medium"
                   />
                 </div>
               </div>
 
-              {/* Current Question Display */}
-              <div className="p-4 rounded-xl bg-primary/10 border border-primary/25 space-y-2">
+              {/* Active Question Box */}
+              <div className="p-5 rounded-2xl bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border border-primary/25 space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold font-mono text-primary flex items-center gap-1.5">
-                    <Flame className="w-3.5 h-3.5" />
-                    ACTIVE INTERVIEW QUESTION:
+                  <span className="text-xs font-mono font-bold text-primary flex items-center gap-1.5">
+                    <Flame className="w-4 h-4 text-primary" />
+                    ACTIVE INTERVIEW QUESTION
                   </span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-mono bg-background/80 px-2 py-0.5 rounded text-foreground border border-border">
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs font-mono px-3 py-1 rounded-lg bg-background/80 text-foreground border border-border font-bold">
                       ⏱ {formatTime(timerSeconds)}
                     </span>
                     <button
                       onClick={() => setIsTimerRunning(!isTimerRunning)}
-                      className="text-xs text-primary underline cursor-pointer"
+                      className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline cursor-pointer"
                     >
-                      {isTimerRunning ? 'Pause' : 'Start Timer'}
+                      {isTimerRunning ? (
+                        <>
+                          <Pause className="w-3 h-3" /> Pause
+                        </>
+                      ) : (
+                        <>
+                          <Play className="w-3 h-3" /> Start
+                        </>
+                      )}
                     </button>
                   </div>
                 </div>
@@ -689,29 +731,29 @@ export default function InterviewStudio() {
                   value={currentQuestion}
                   onChange={(e) => setCurrentQuestion(e.target.value)}
                   rows={2}
-                  className="w-full bg-transparent border-0 text-sm sm:text-base font-semibold text-foreground focus:outline-none resize-none"
+                  className="w-full bg-transparent border-0 text-sm sm:text-base font-bold text-foreground focus:outline-none resize-none pt-1"
                 />
               </div>
             </div>
 
-            {/* Conversation Stream & Scorecards */}
+            {/* Conversation Log & Evaluation Cards */}
             <div className="space-y-4">
               {grillerHistory.map((item, idx) => (
                 <div
                   key={idx}
-                  className={`p-4 sm:p-5 rounded-2xl border transition-all ${
+                  className={`p-5 rounded-3xl border transition-all duration-200 ${
                     item.role === 'candidate'
-                      ? 'bg-card border-border/80 ml-6'
-                      : 'bg-primary/5 border-primary/20 mr-6'
+                      ? 'bg-card border-border ml-4 sm:ml-8'
+                      : 'bg-primary/5 border-primary/25 mr-4 sm:mr-8 shadow-sm'
                   }`}
                 >
                   <div className="flex items-center justify-between text-xs font-mono text-muted-foreground mb-2">
-                    <span className="font-bold flex items-center gap-1.5">
+                    <span className="font-bold flex items-center gap-2">
                       {item.role === 'candidate' ? (
-                        <>👤 Prakhar (Candidate)</>
+                        <span className="text-foreground">👤 Prakhar (Your Response)</span>
                       ) : (
-                        <span className="text-primary flex items-center gap-1">
-                          <Flame className="w-3.5 h-3.5" /> Tough Bar Raiser / Partner
+                        <span className="text-primary flex items-center gap-1.5">
+                          <Flame className="w-4 h-4 text-primary" /> Tough Bar Raiser / Partner
                         </span>
                       )}
                     </span>
@@ -721,21 +763,21 @@ export default function InterviewStudio() {
                     {item.text}
                   </p>
 
-                  {/* If Scorecard Result */}
+                  {/* Rubric Scorecard */}
                   {item.scoreResult && (
-                    <div className="mt-4 p-4 rounded-xl bg-card border border-border space-y-4">
-                      <div className="flex items-center justify-between border-b border-border pb-3">
+                    <div className="mt-5 p-5 rounded-2xl bg-card border border-border shadow-md space-y-5">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border/80 pb-4">
                         <div>
-                          <span className="text-xs font-mono text-muted-foreground">OVERALL RATING</span>
-                          <div className="text-2xl font-bold font-display text-foreground flex items-center gap-2">
+                          <span className="text-xs font-mono text-muted-foreground">OVERALL EVALUATION SCORE</span>
+                          <div className="text-3xl font-display font-bold text-foreground flex items-center gap-3 mt-0.5">
                             {item.scoreResult.overallScore}/100
                             <span
-                              className={`text-xs px-2.5 py-0.5 rounded-full font-mono font-bold ${
+                              className={`text-xs px-3 py-1 rounded-full font-mono font-bold ${
                                 item.scoreResult.verdict === 'STRONG HIRE'
-                                  ? 'bg-emerald-500/20 text-emerald-400'
+                                  ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
                                   : item.scoreResult.verdict === 'LEAN HIRE'
-                                  ? 'bg-blue-500/20 text-blue-400'
-                                  : 'bg-red-500/20 text-red-400'
+                                  ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                                  : 'bg-red-500/20 text-red-400 border border-red-500/30'
                               }`}
                             >
                               {item.scoreResult.verdict}
@@ -744,33 +786,52 @@ export default function InterviewStudio() {
                         </div>
                       </div>
 
-                      {/* 4 Rubric Scores */}
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                      {/* 4 Dimension Cards */}
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs">
                         {item.scoreResult.rubric &&
                           Object.entries(item.scoreResult.rubric).map(([k, v]: any) => (
-                            <div key={k} className="p-2.5 rounded-lg bg-background border border-border">
-                              <span className="text-muted-foreground capitalize block truncate">
+                            <div key={k} className="p-3 rounded-xl bg-background border border-border/90">
+                              <span className="text-muted-foreground capitalize block truncate font-medium">
                                 {k.replace(/([A-Z])/g, ' $1')}
                               </span>
-                              <span className="text-sm font-bold text-primary">{v.score}/25</span>
+                              <div className="text-base font-bold text-primary mt-1">{v.score}/25</div>
                             </div>
                           ))}
                       </div>
 
-                      <div className="space-y-2 text-xs">
-                        <p>
-                          <strong className="text-emerald-400">Top Strength:</strong>{' '}
-                          {item.scoreResult.topStrength}
-                        </p>
-                        <p>
-                          <strong className="text-red-400">Critical Vulnerability:</strong>{' '}
-                          {item.scoreResult.criticalVulnerability}
-                        </p>
-                        <div className="p-3 rounded-lg bg-primary/10 border border-primary/20 space-y-1">
-                          <span className="text-[11px] font-mono font-bold text-primary uppercase">
-                            Executive Re-worded Script:
-                          </span>
-                          <p className="text-xs text-foreground/90 leading-relaxed italic">
+                      {/* Strengths & Vulnerabilities */}
+                      <div className="space-y-2.5 text-xs sm:text-sm">
+                        <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                          <strong className="text-emerald-400">Top Resonating Strength: </strong>
+                          <span className="text-foreground/90">{item.scoreResult.topStrength}</span>
+                        </div>
+                        <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20">
+                          <strong className="text-red-400">Critical Vulnerability Exposed: </strong>
+                          <span className="text-foreground/90">{item.scoreResult.criticalVulnerability}</span>
+                        </div>
+
+                        {/* Rewritten Executive Script */}
+                        <div className="p-4 rounded-xl bg-primary/10 border border-primary/25 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-mono font-bold text-primary uppercase">
+                              Executive Re-worded Script:
+                            </span>
+                            <button
+                              onClick={() => handleCopy(item.scoreResult!.rewordedScript, 'reworded-script')}
+                              className="text-xs text-primary hover:underline inline-flex items-center gap-1 cursor-pointer"
+                            >
+                              {copiedKey === 'reworded-script' ? (
+                                <>
+                                  <Check className="w-3.5 h-3.5" /> Copied
+                                </>
+                              ) : (
+                                <>
+                                  <Copy className="w-3.5 h-3.5" /> Copy Script
+                                </>
+                              )}
+                            </button>
+                          </div>
+                          <p className="text-xs sm:text-sm text-foreground/95 leading-relaxed italic bg-background/50 p-3 rounded-lg border border-border">
                             "{item.scoreResult.rewordedScript}"
                           </p>
                         </div>
@@ -781,13 +842,15 @@ export default function InterviewStudio() {
               ))}
             </div>
 
-            {/* Answer Input Box */}
-            <div className="p-4 rounded-2xl bg-card border border-border shadow-md space-y-3">
-              <label className="text-xs font-mono text-muted-foreground flex items-center justify-between">
-                <span>YOUR RESPONSE (STAR FORMAT)</span>
-                <span>Speak or type as Prakhar</span>
-              </label>
+            {/* Response Input Panel */}
+            <div className="p-5 rounded-3xl bg-card border border-border shadow-xl space-y-3.5">
+              <div className="flex items-center justify-between text-xs font-mono text-muted-foreground">
+                <span className="font-bold">YOUR RESPONSE (STAR FRAMEWORK)</span>
+                <span className="hidden sm:inline">Shortcut: ⌘ + Enter to Score</span>
+              </div>
+
               <textarea
+                ref={textareaRef}
                 value={candidateResponse}
                 onChange={(e) => {
                   setCandidateResponse(e.target.value)
@@ -795,41 +858,48 @@ export default function InterviewStudio() {
                     setIsTimerRunning(true)
                   }
                 }}
-                rows={4}
-                placeholder="Structure with: Situation -> Task -> Action (tools, governance) -> Result (metrics)..."
-                className="w-full bg-background border border-border rounded-xl p-3 text-sm text-foreground focus:outline-none focus:border-primary resize-y"
+                rows={5}
+                placeholder="Deliver your structured response: Situation -> Task -> Action (tools, governance) -> Result (metrics)..."
+                className="w-full bg-background border border-border rounded-2xl p-4 text-sm text-foreground focus:outline-none focus:border-primary resize-y leading-relaxed font-sans"
               />
 
-              <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
                 <div className="flex items-center gap-2">
+                  <button
+                    onClick={fillSampleAnswer}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-muted/60 text-xs font-semibold text-muted-foreground hover:text-foreground transition-all cursor-pointer"
+                  >
+                    <BookOpen className="w-3.5 h-3.5" />
+                    Fill Verified STAR Sample
+                  </button>
                   <button
                     onClick={() => {
                       setCandidateResponse('')
                       setTimerSeconds(0)
                       setIsTimerRunning(false)
                     }}
-                    className="p-2 rounded-lg text-muted-foreground hover:text-foreground text-xs flex items-center gap-1 cursor-pointer"
+                    className="p-2 rounded-xl text-muted-foreground hover:text-foreground text-xs flex items-center gap-1 cursor-pointer"
                   >
                     <RotateCcw className="w-3.5 h-3.5" />
                     Reset
                   </button>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2.5">
                   <button
                     disabled={isGrilling || !candidateResponse.trim()}
                     onClick={() => handleSendGrill('grill')}
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-card border border-border text-foreground text-xs font-semibold hover:border-primary/50 transition-all disabled:opacity-50 cursor-pointer"
+                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-card border border-border text-foreground text-xs font-bold hover:border-primary/50 active:scale-[0.98] transition-all disabled:opacity-50 cursor-pointer shadow-sm"
                   >
-                    <Flame className="w-3.5 h-3.5 text-red-400" />
+                    <Flame className="w-4 h-4 text-red-400" />
                     Pressure Probe (Grill)
                   </button>
                   <button
                     disabled={isGrilling || !candidateResponse.trim()}
                     onClick={() => handleSendGrill('score')}
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-xs font-bold hover:bg-primary/90 transition-all disabled:opacity-50 shadow cursor-pointer"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-primary to-accent text-white font-bold text-xs hover:opacity-95 active:scale-[0.98] transition-all disabled:opacity-50 shadow-md shadow-primary/20 cursor-pointer"
                   >
-                    <Send className="w-3.5 h-3.5" />
+                    <Send className="w-4 h-4" />
                     Score My Answer
                   </button>
                 </div>
@@ -838,51 +908,53 @@ export default function InterviewStudio() {
           </div>
         )}
 
-        {/* ================= TAB 3: RAPID-FIRE DRILLS ================= */}
+        {/* ========================================================================= */}
+        {/* TAB 3: RAPID-FIRE DRILLS                                                  */}
+        {/* ========================================================================= */}
         {activeTab === 'rapidfire' && (
-          <div className="max-w-2xl mx-auto space-y-6 animate-fadeIn">
+          <div className="max-w-2xl mx-auto space-y-6">
             <div className="text-center space-y-2">
               <span className="text-xs font-mono font-bold px-3 py-1 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                Rapid-Fire Conditioning
+                Cognitive Conditioning
               </span>
-              <h2 className="text-2xl font-display font-bold text-foreground">
-                Executive Flash Drills
+              <h2 className="text-2xl sm:text-3xl font-display font-bold text-foreground">
+                Rapid-Fire Executive Drills
               </h2>
               <p className="text-xs sm:text-sm text-muted-foreground">
-                Drill through unpredictable scenarios. Deliver crisp 45-60 second answers.
+                Practice crisp 60-second spontaneous executive framing under pressure.
               </p>
             </div>
 
-            {/* Drill Card */}
-            <div className="p-8 rounded-2xl bg-card border border-border shadow-lg space-y-6 relative overflow-hidden">
+            {/* Flashcard Component */}
+            <div className="p-8 sm:p-10 rounded-3xl bg-card/80 backdrop-blur-xl border border-border shadow-2xl space-y-6 relative overflow-hidden">
               <div className="flex items-center justify-between text-xs font-mono text-muted-foreground">
-                <span className="px-2.5 py-1 rounded bg-muted text-foreground font-semibold">
+                <span className="px-3 py-1 rounded-lg bg-primary/10 text-primary border border-primary/20 font-bold">
                   {RAPID_FIRE_QUESTIONS[rapidFireIndex].category}
                 </span>
                 <span>
-                  Question {rapidFireIndex + 1} of {RAPID_FIRE_QUESTIONS.length}
+                  Drill {rapidFireIndex + 1} of {RAPID_FIRE_QUESTIONS.length}
                 </span>
               </div>
 
-              <div className="text-lg sm:text-xl font-display font-semibold text-foreground leading-relaxed">
+              <div className="text-xl sm:text-2xl font-display font-bold text-foreground leading-relaxed">
                 "{RAPID_FIRE_QUESTIONS[rapidFireIndex].question}"
               </div>
 
               {showRapidHint ? (
-                <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-200 leading-relaxed animate-fadeIn">
-                  <strong>Prakhar's Defense Cue: </strong>
+                <div className="p-5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-xs sm:text-sm text-amber-200 leading-relaxed animate-fadeIn">
+                  <strong className="text-amber-400 font-semibold">Prakhar's Metric Anchor Cue: </strong>
                   {RAPID_FIRE_QUESTIONS[rapidFireIndex].hint}
                 </div>
               ) : (
                 <button
                   onClick={() => setShowRapidHint(true)}
-                  className="text-xs text-muted-foreground hover:text-amber-400 underline cursor-pointer"
+                  className="text-xs font-medium text-muted-foreground hover:text-amber-400 underline cursor-pointer"
                 >
-                  Need a hint / metric anchor?
+                  Need a metric anchor or STAR hint?
                 </button>
               )}
 
-              <div className="flex items-center justify-between pt-4 border-t border-border/80">
+              <div className="flex items-center justify-between pt-6 border-t border-border/80">
                 <button
                   onClick={() => {
                     setShowRapidHint(false)
@@ -890,7 +962,7 @@ export default function InterviewStudio() {
                       idx > 0 ? idx - 1 : RAPID_FIRE_QUESTIONS.length - 1
                     )
                   }}
-                  className="px-3.5 py-1.5 rounded-lg border border-border text-xs text-muted-foreground hover:text-foreground cursor-pointer"
+                  className="px-4 py-2 rounded-xl border border-border text-xs font-semibold text-muted-foreground hover:text-foreground cursor-pointer active:scale-[0.97] transition-all"
                 >
                   Previous
                 </button>
@@ -902,116 +974,116 @@ export default function InterviewStudio() {
                       idx < RAPID_FIRE_QUESTIONS.length - 1 ? idx + 1 : 0
                     )
                   }}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-primary-foreground font-semibold text-xs hover:bg-primary/90 transition-all cursor-pointer"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-primary-foreground font-bold text-xs hover:bg-primary/90 active:scale-[0.97] transition-all cursor-pointer shadow"
                 >
                   Next Drill
-                  <ChevronRight className="w-3.5 h-3.5" />
+                  <ChevronRight className="w-4 h-4" />
                 </button>
               </div>
             </div>
           </div>
         )}
 
-        {/* ================= TAB 4: 1-CLICK CV TAILOR ================= */}
+        {/* ========================================================================= */}
+        {/* TAB 4: 1-CLICK CV TAILOR                                                  */}
+        {/* ========================================================================= */}
         {activeTab === 'tailor' && (
-          <div className="max-w-4xl mx-auto space-y-6 animate-fadeIn">
-            {/* Header info */}
-            <div className="space-y-1">
+          <div className="max-w-4xl mx-auto space-y-6">
+            <div className="space-y-1.5">
               <h2 className="text-xl sm:text-2xl font-display font-bold text-foreground">
-                Automated ATS Resume Tailoring Engine
+                Automated ATS Resume Tailor
               </h2>
               <p className="text-xs sm:text-sm text-muted-foreground">
-                Strict claim traceability to verified Master Profile facts · Zero hallucination
+                Generates tailored resume bullets and elevator pitch strictly verified against your Master Profile.
               </p>
             </div>
 
-            {/* Input Form */}
-            <div className="p-6 rounded-2xl bg-card border border-border shadow-sm space-y-4">
+            {/* Input Form Card */}
+            <div className="p-6 sm:p-7 rounded-3xl bg-card border border-border shadow-sm space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-xs font-mono text-muted-foreground block mb-1">
+                  <label className="text-xs font-mono font-bold text-muted-foreground block mb-1.5">
                     TARGET COMPANY
                   </label>
                   <input
                     type="text"
                     value={tailorCompany}
                     onChange={(e) => setTailorCompany(e.target.value)}
-                    className="w-full bg-background border border-border rounded-xl px-3.5 py-2 text-sm text-foreground focus:outline-none focus:border-primary"
+                    className="w-full bg-background border border-border rounded-xl px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:border-primary font-medium"
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-mono text-muted-foreground block mb-1">
-                    TARGET ROLE TITLE
+                  <label className="text-xs font-mono font-bold text-muted-foreground block mb-1.5">
+                    ROLE TITLE
                   </label>
                   <input
                     type="text"
                     value={tailorRole}
                     onChange={(e) => setTailorRole(e.target.value)}
-                    className="w-full bg-background border border-border rounded-xl px-3.5 py-2 text-sm text-foreground focus:outline-none focus:border-primary"
+                    className="w-full bg-background border border-border rounded-xl px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:border-primary font-medium"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="text-xs font-mono text-muted-foreground block mb-1">
-                  JOB DESCRIPTION (PASTE RAW JD)
+                <label className="text-xs font-mono font-bold text-muted-foreground block mb-1.5">
+                  JOB DESCRIPTION (RAW TEXT)
                 </label>
                 <textarea
                   value={tailorJdText}
                   onChange={(e) => setTailorJdText(e.target.value)}
                   rows={6}
-                  placeholder="Paste complete job description text here..."
-                  className="w-full bg-background border border-border rounded-xl p-3 text-xs sm:text-sm text-foreground focus:outline-none focus:border-primary font-mono"
+                  placeholder="Paste complete job description text..."
+                  className="w-full bg-background border border-border rounded-xl p-3.5 text-xs sm:text-sm text-foreground focus:outline-none focus:border-primary font-mono leading-relaxed"
                 />
               </div>
 
-              <div className="flex items-center justify-between pt-2">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2">
                 <span className="text-xs text-muted-foreground">
-                  Grounded against: <code className="text-primary">master_profile.json</code> (Capgemini C&CA Senior Manager)
+                  Grounded strictly in: <code className="text-primary font-mono">master_profile.json</code> (Zero Hallucination)
                 </span>
                 <button
                   disabled={isTailoring || !tailorJdText.trim()}
                   onClick={handleRunTailor}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-primary-foreground font-bold text-xs hover:bg-primary/90 transition-all disabled:opacity-50 shadow cursor-pointer"
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-primary to-accent text-white font-bold text-xs hover:opacity-95 active:scale-[0.98] transition-all disabled:opacity-50 shadow-md shadow-primary/20 cursor-pointer"
                 >
                   <Sparkles className="w-4 h-4" />
-                  {isTailoring ? 'Analyzing ATS Alignment...' : 'Generate Tailored Resume & Pitch'}
+                  {isTailoring ? 'Analyzing ATS Match...' : 'Generate Tailored Resume & Pitch'}
                 </button>
               </div>
             </div>
 
-            {/* Tailor Output Results */}
+            {/* Results Display */}
             {tailorResult && (
-              <div className="space-y-6 animate-fadeIn">
-                {/* Score & Summary Card */}
-                <div className="p-6 rounded-2xl bg-card border border-border shadow-sm space-y-4">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-4">
+              <div className="space-y-6">
+                {/* Score & Rationale */}
+                <div className="p-6 sm:p-7 rounded-3xl bg-card border border-border shadow-sm space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/80 pb-4">
                     <div>
-                      <span className="text-xs font-mono text-muted-foreground">ATS MATCH RATING</span>
-                      <div className="text-3xl font-display font-bold text-emerald-400 flex items-center gap-2">
+                      <span className="text-xs font-mono text-muted-foreground">ATS FIT ESTIMATE</span>
+                      <div className="text-3xl font-display font-bold text-emerald-400 flex items-center gap-3 mt-1">
                         {tailorResult.atsMatchScore}%
-                        <span className="text-xs px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-mono font-medium">
-                          High Fit
+                        <span className="text-xs px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-400 font-mono font-semibold border border-emerald-500/25">
+                          High Strategic Match
                         </span>
                       </div>
                     </div>
-                    <p className="text-xs sm:text-sm text-muted-foreground max-w-xl">
+                    <p className="text-xs sm:text-sm text-muted-foreground max-w-xl leading-relaxed">
                       {tailorResult.matchRationale}
                     </p>
                   </div>
 
-                  {/* Keywords Grid */}
+                  {/* Keywords */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
                     <div className="space-y-2">
-                      <span className="text-xs font-mono font-bold text-emerald-400 flex items-center gap-1.5">
-                        <CheckCircle2 className="w-3.5 h-3.5" />
-                        MATCHING KEYWORDS:
+                      <span className="text-xs font-mono font-bold text-emerald-400 flex items-center gap-2">
+                        <CheckCircle2 className="w-4 h-4" /> MATCHED ATS KEYWORDS:
                       </span>
                       <div className="flex flex-wrap gap-1.5">
                         {tailorResult.matchingKeywords?.map((kw: string, i: number) => (
                           <span
                             key={i}
-                            className="text-xs px-2.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 font-mono"
+                            className="text-xs px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 font-mono"
                           >
                             {kw}
                           </span>
@@ -1020,15 +1092,14 @@ export default function InterviewStudio() {
                     </div>
 
                     <div className="space-y-2">
-                      <span className="text-xs font-mono font-bold text-amber-400 flex items-center gap-1.5">
-                        <AlertTriangle className="w-3.5 h-3.5" />
-                        UNDEREMPHASIZED KEYWORDS TO INSERT:
+                      <span className="text-xs font-mono font-bold text-amber-400 flex items-center gap-2">
+                        <AlertTriangle className="w-4 h-4" /> MISSING / UNDEREMPHASIZED KEYWORDS:
                       </span>
                       <div className="flex flex-wrap gap-1.5">
                         {tailorResult.missingKeywords?.map((kw: string, i: number) => (
                           <span
                             key={i}
-                            className="text-xs px-2.5 py-0.5 rounded-md bg-amber-500/10 text-amber-300 border border-amber-500/20 font-mono"
+                            className="text-xs px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-300 border border-amber-500/20 font-mono"
                           >
                             {kw}
                           </span>
@@ -1038,11 +1109,11 @@ export default function InterviewStudio() {
                   </div>
                 </div>
 
-                {/* Tailored Executive Summary */}
-                <div className="p-6 rounded-2xl bg-card border border-border shadow-sm space-y-2">
+                {/* Executive Summary */}
+                <div className="p-6 sm:p-7 rounded-3xl bg-card border border-border shadow-sm space-y-3">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-bold font-mono text-primary uppercase">
-                      Tailored Executive Resume Summary
+                    <h3 className="text-xs font-mono font-bold text-primary uppercase">
+                      Tailored Executive Summary
                     </h3>
                     <button
                       onClick={() => handleCopy(tailorResult.tailoredSummary, 'tailor-summary')}
@@ -1059,16 +1130,16 @@ export default function InterviewStudio() {
                       )}
                     </button>
                   </div>
-                  <p className="text-xs sm:text-sm text-foreground/90 leading-relaxed bg-background/50 p-4 rounded-xl border border-border">
+                  <p className="text-xs sm:text-sm text-foreground/90 leading-relaxed bg-background/60 p-4 rounded-2xl border border-border">
                     {tailorResult.tailoredSummary}
                   </p>
                 </div>
 
                 {/* Tailored Bullets */}
-                <div className="p-6 rounded-2xl bg-card border border-border shadow-sm space-y-3">
+                <div className="p-6 sm:p-7 rounded-3xl bg-card border border-border shadow-sm space-y-4">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-bold font-mono text-primary uppercase">
-                      Tailored Verified Bullet Points (Anti-Hallucination)
+                    <h3 className="text-xs font-mono font-bold text-primary uppercase">
+                      Tailored Verified Resume Bullets
                     </h3>
                     <button
                       onClick={() => {
@@ -1091,21 +1162,19 @@ export default function InterviewStudio() {
                     </button>
                   </div>
 
-                  <div className="space-y-3 pt-2">
+                  <div className="space-y-3 pt-1">
                     {tailorResult.tailoredBulletPoints?.map((bp: any, idx: number) => (
                       <div
                         key={idx}
-                        className="p-3.5 rounded-xl bg-background border border-border space-y-1.5"
+                        className="p-4 rounded-2xl bg-background border border-border/80 space-y-1.5"
                       >
-                        <div className="flex items-center justify-between text-[11px] text-muted-foreground">
-                          <span className="font-mono text-primary font-semibold">
-                            {bp.category || `Bullet ${idx + 1}`}
-                          </span>
-                          <span className="text-[10px] text-muted-foreground/80 italic truncate max-w-xs">
+                        <div className="flex items-center justify-between text-xs text-muted-foreground font-mono">
+                          <span className="text-primary font-bold">{bp.category || `Bullet 0${idx + 1}`}</span>
+                          <span className="text-[10px] text-muted-foreground italic truncate max-w-xs">
                             Source: {bp.sourceFact}
                           </span>
                         </div>
-                        <p className="text-xs sm:text-sm text-foreground/95 leading-relaxed font-sans">
+                        <p className="text-xs sm:text-sm text-foreground/95 leading-relaxed">
                           • {bp.bullet}
                         </p>
                       </div>
@@ -1114,10 +1183,10 @@ export default function InterviewStudio() {
                 </div>
 
                 {/* 60-Second Elevator Pitch */}
-                <div className="p-6 rounded-2xl bg-card border border-border shadow-sm space-y-2">
+                <div className="p-6 sm:p-7 rounded-3xl bg-card border border-border shadow-sm space-y-3">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-bold font-mono text-emerald-400 uppercase">
-                      60-Second Spoken Elevator Pitch ('Tell Me About Yourself')
+                    <h3 className="text-xs font-mono font-bold text-emerald-400 uppercase flex items-center gap-2">
+                      <Award className="w-4 h-4" /> 60-Second Spoken Elevator Pitch ('Tell Me About Yourself')
                     </h3>
                     <button
                       onClick={() => handleCopy(tailorResult.interviewElevatorPitch, 'pitch')}
@@ -1125,7 +1194,7 @@ export default function InterviewStudio() {
                     >
                       {copiedKey === 'pitch' ? (
                         <>
-                          <Check className="w-3.5 h-3.5 text-emerald-400" /> Copied
+                          <Check className="w-3.5 h-3.5 text-emerald-400" /> Copied Pitch
                         </>
                       ) : (
                         <>
@@ -1134,7 +1203,7 @@ export default function InterviewStudio() {
                       )}
                     </button>
                   </div>
-                  <p className="text-xs sm:text-sm text-foreground/90 leading-relaxed bg-background/50 p-4 rounded-xl border border-border italic">
+                  <p className="text-xs sm:text-sm text-foreground/90 leading-relaxed bg-background/60 p-4 rounded-2xl border border-border italic">
                     "{tailorResult.interviewElevatorPitch}"
                   </p>
                 </div>
