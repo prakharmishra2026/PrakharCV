@@ -1,4 +1,3 @@
-import masterProfile from '../src/data/master_profile.json'
 import {
   callFreeLLMWithFallback,
   extractJsonFromText,
@@ -34,7 +33,7 @@ export default async function handler(req, res) {
 
     // High-density compacted profile (1.5KB vs 14KB) for sub-second LLM processing
     const compactedProfile = {
-      candidate: masterProfile.name || 'Prakhar Mishra',
+      candidate: 'Prakhar Mishra',
       currentRole: 'Senior Manager & Chief of Staff / AI Transformation Lead at Capgemini India',
       verifiedMetrics: [
         'AAT Certification failure rate reduced from 20% to <5% via automated skill drift detection',
