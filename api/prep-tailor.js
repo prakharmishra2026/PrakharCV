@@ -1,9 +1,7 @@
 import masterProfile from '../src/data/master_profile.json'
 import { callFreeLLMWithFallback, extractJsonFromText } from './_shared/free-llm-router.js'
 
-export const config = {
-  runtime: 'edge',
-}
+export const maxDuration = 60
 
 function stripThinkingTags(text) {
   if (!text) return ''
@@ -37,6 +35,25 @@ export default async function handler(req) {
       })
     }
 
+    // High-density compacted profile (1.5KB vs 14KB) for sub-second LLM processing
+    const compactedProfile = {
+      candidate: masterProfile.name || 'Prakhar Mishra',
+      currentRole: 'Senior Manager & Chief of Staff / AI Transformation Lead at Capgemini India',
+      verifiedMetrics: [
+        'AAT Certification failure rate reduced from 20% to <5% via automated skill drift detection',
+        'TalentX AI resource allocation platform scaling across 637 cross-functional rotations',
+        'GenAI prompt caching and token optimization: 11,700 tokens down to 3,000 tokens (74% latency cut)',
+        'Enterprise AI governance board orchestration across 38 practice leaders',
+        'Led unit of 7 direct reports and 50+ indirect contributors across global accounts',
+      ],
+      coreCompetencies: [
+        'Enterprise Generative AI Strategy & Operating Model Design',
+        'Chief of Staff Governance & Strategic Cadence Execution',
+        'Large-Scale Delivery Modernization & Cost-to-Serve Optimization',
+        'Client AI Advisory & Transformation Architecture',
+      ],
+    }
+
     const systemPrompt = `You are an elite Applicant Tracking System (ATS) optimization specialist and executive resume writer.
 You are tailoring the CV for Prakhar Mishra (Senior Manager / Chief of Staff & AI Transformation Lead at Capgemini India).
 
@@ -46,8 +63,8 @@ STRICT ANTI-HALLUCINATION GUARDRAILS:
 - Zero mention of "myNaukri" or personal automated scraper workspaces.
 - Protect confidentiality: use "large-scale developer division" instead of exact headcount; use "major US retail client" instead of proprietary names.
 
-MASTER PROFILE JSON (GROUND TRUTH):
-${JSON.stringify(masterProfile)}
+VERIFIED MASTER PROFILE FACTS:
+${JSON.stringify(compactedProfile)}
 
 TASK:
 Analyze the provided Job Description for ${companyName} (${roleTitle}) against Prakhar's Master Profile.
@@ -72,7 +89,7 @@ Produce a JSON response with the following schema:
       { role: 'system', content: systemPrompt },
       {
         role: 'user',
-        content: `Analyze this Job Description and generate tailored ATS assets:\n\nCOMPANY: ${companyName}\nROLE: ${roleTitle}\n\nJOB DESCRIPTION:\n${jdText}`,
+        content: `Analyze this Job Description and generate tailored ATS assets:\n\nCOMPANY: ${companyName}\nROLE: ${roleTitle}\n\nJOB DESCRIPTION:\n${jdText.slice(0, 3000)}`,
       },
     ]
 
@@ -80,6 +97,7 @@ Produce a JSON response with the following schema:
       apiKey,
       messages,
       temperature: 0.2,
+      max_tokens: 1800,
       requireJson: true,
     })
 
@@ -92,7 +110,7 @@ Produce a JSON response with the following schema:
       })
     }
 
-    return new Response(cleanContent, {
+    return new Response(JSON.stringify({ raw: cleanContent, _modelUsed: modelUsed }), {
       headers: { 'Content-Type': 'application/json' },
     })
   } catch (err) {

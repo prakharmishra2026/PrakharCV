@@ -1,8 +1,6 @@
 import { callFreeLLMWithFallback, extractJsonFromText } from './_shared/free-llm-router.js'
 
-export const config = {
-  runtime: 'edge',
-}
+export const maxDuration = 60
 
 function stripThinkingTags(text) {
   if (!text) return ''
