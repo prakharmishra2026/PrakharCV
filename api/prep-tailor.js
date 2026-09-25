@@ -1,5 +1,10 @@
 import masterProfile from '../src/data/master_profile.json'
-import { callFreeLLMWithFallback, extractJsonFromText } from './_shared/free-llm-router.js'
+import {
+  callFreeLLMWithFallback,
+  extractJsonFromText,
+  parseRequestBody,
+  sendJsonResponse,
+} from './_shared/free-llm-router.js'
 
 export const maxDuration = 60
 
@@ -8,31 +13,23 @@ function stripThinkingTags(text) {
   return text.replace(/<think>[\s\S]*?<\/think>/gi, '').trim()
 }
 
-export default async function handler(req) {
+export default async function handler(req, res) {
   if (req.method !== 'POST') {
-    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
-      status: 405,
-      headers: { 'Content-Type': 'application/json' },
-    })
+    return sendJsonResponse(res, 405, { error: 'Method not allowed' })
   }
 
   const apiKey = process.env.OPENROUTER_API_KEY || process.env.OPENAI_API_KEY
 
   if (!apiKey) {
-    return new Response(JSON.stringify({ error: 'OpenRouter API key not configured' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    })
+    return sendJsonResponse(res, 500, { error: 'OpenRouter API key not configured' })
   }
 
   try {
-    const { jdText = '', companyName = 'Target Company', roleTitle = 'Target Role' } = await req.json()
+    const body = await parseRequestBody(req)
+    const { jdText = '', companyName = 'Target Company', roleTitle = 'Target Role' } = body
 
     if (!jdText || jdText.trim().length < 20) {
-      return new Response(JSON.stringify({ error: 'Job description text is too short or empty' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' },
-      })
+      return sendJsonResponse(res, 400, { error: 'Job description text is too short or empty' })
     }
 
     // High-density compacted profile (1.5KB vs 14KB) for sub-second LLM processing
@@ -105,18 +102,11 @@ Produce a JSON response with the following schema:
     const parsed = extractJsonFromText(cleanContent)
 
     if (parsed) {
-      return new Response(JSON.stringify({ ...parsed, _modelUsed: modelUsed }), {
-        headers: { 'Content-Type': 'application/json' },
-      })
+      return sendJsonResponse(res, 200, { ...parsed, _modelUsed: modelUsed })
     }
 
-    return new Response(JSON.stringify({ raw: cleanContent, _modelUsed: modelUsed }), {
-      headers: { 'Content-Type': 'application/json' },
-    })
+    return sendJsonResponse(res, 200, { raw: cleanContent, _modelUsed: modelUsed })
   } catch (err) {
-    return new Response(JSON.stringify({ error: err.message || 'Server error' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    })
+    return sendJsonResponse(res, 500, { error: err.message || 'Server error' })
   }
 }

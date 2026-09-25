@@ -5,11 +5,43 @@
  */
 
 export const FREE_MODELS_LADDER = [
-  'google/gemma-4-26b-a4b-it:free',
-  'qwen/qwen3.8-27b:free',
-  'google/gemma-4-31b-it:free',
   'liquid/lfm-2.5-2.6b:free',
+  'nvidia/nemotron-3-super-120b-a12b:free',
+  'qwen/qwen3.8-27b:free',
+  'nex-agi/nex-n2.5-mini:free',
+  'google/gemma-4-26b-a4b-it:free',
+  'google/gemma-4-31b-it:free',
 ]
+
+/**
+ * Universal request body parser compatible with both Node Serverless and Edge
+ */
+export async function parseRequestBody(req) {
+  try {
+    if (req.body) {
+      return typeof req.body === 'string' ? JSON.parse(req.body) : req.body
+    }
+    if (typeof req.json === 'function') {
+      return await req.json()
+    }
+  } catch (e) {
+    console.warn('[Router] parseRequestBody failed:', e.message)
+  }
+  return {}
+}
+
+/**
+ * Universal JSON response sender compatible with both Node Serverless and Edge
+ */
+export function sendJsonResponse(res, status, data) {
+  if (res && typeof res.status === 'function') {
+    return res.status(status).json(data)
+  }
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: { 'Content-Type': 'application/json' },
+  })
+}
 
 /**
  * Robust JSON extractor for LLM output (handles raw JSON, markdown codeblocks, or surrounding text)
