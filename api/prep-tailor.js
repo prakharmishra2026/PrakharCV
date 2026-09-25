@@ -93,7 +93,7 @@ Produce a JSON response with the following schema:
       apiKey,
       messages,
       temperature: 0.2,
-      max_tokens: 950,
+      max_tokens: 1400,
       requireJson: true,
     })
 
