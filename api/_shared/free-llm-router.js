@@ -1,16 +1,17 @@
 /**
  * Free LLM Fallback & RoutingMagic System for OpenRouter
- * Exclusively routes through OpenRouter's free tier (:free models)
+ * Exclusively routes through OpenRouter's free tier (:free models and openrouter/free)
  * with multi-tier automatic fallback so no credits are ever consumed.
  */
 
 export const FREE_MODELS_LADDER = [
-  'meta-llama/llama-3.3-70b-instruct:free',
-  'google/gemini-2.0-flash-exp:free',
-  'deepseek/deepseek-r1:free',
-  'qwen/qwen-2.5-coder-32b-instruct:free',
-  'meta-llama/llama-3.1-8b-instruct:free',
-  'mistralai/mistral-small-24b-instruct-2501:free',
+  'openrouter/free',
+  'google/gemma-4-31b-it:free',
+  'qwen/qwen3.8-27b:free',
+  'google/gemma-4-26b-a4b-it:free',
+  'nvidia/nemotron-3-super-120b-a12b:free',
+  'nvidia/nemotron-3.5-lightning:free',
+  'z-ai/glm-5.2:free',
 ]
 
 /**
@@ -46,7 +47,7 @@ export function extractJsonFromText(text) {
 }
 
 /**
- * Calls OpenRouter with routingmagic fallback across free models
+ * Calls OpenRouter with routingmagic fallback across verified free models
  */
 export async function callFreeLLMWithFallback({
   apiKey,
@@ -71,8 +72,8 @@ export async function callFreeLLMWithFallback({
         max_tokens,
       }
 
-      // Add response_format if required and not deepseek-r1 (which can conflict with strict json format)
-      if (requireJson && !primaryModel.includes('deepseek-r1')) {
+      // Add response_format if required (avoid if openrouter/free or reasoning models conflict)
+      if (requireJson && primaryModel !== 'openrouter/free') {
         payload.response_format = { type: 'json_object' }
       }
 
