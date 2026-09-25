@@ -6,11 +6,9 @@
 
 export const FREE_MODELS_LADDER = [
   'liquid/lfm-2.5-2.6b:free',
-  'nvidia/nemotron-3-super-120b-a12b:free',
-  'qwen/qwen3.8-27b:free',
   'nex-agi/nex-n2.5-mini:free',
-  'google/gemma-4-26b-a4b-it:free',
-  'google/gemma-4-31b-it:free',
+  'nvidia/nemotron-3-super-120b-a12b:free',
+  'inclusionai/ling-3.0-flash-fin:free',
 ]
 
 /**
@@ -102,9 +100,9 @@ export async function callFreeLLMWithFallback({
         payload.response_format = { type: 'json_object' }
       }
 
-      // Strict 4.5s timeout per model to stay well under Edge function limits
+      // 12s timeout per model attempt to comfortably accommodate full ATS JSON generation
       const controller = new AbortController()
-      const timeoutId = setTimeout(() => controller.abort(), 4800)
+      const timeoutId = setTimeout(() => controller.abort(), 12000)
 
       const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
